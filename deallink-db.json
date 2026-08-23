@@ -1,0 +1,81 @@
+{
+  "creators": [
+    {
+      "id": "creator-user-account",
+      "name": "Swath Creator",
+      "email": "user@deallink.co",
+      "password_hash": "user123",
+      "channel_url": "https://youtube.com/@deallinkcreator",
+      "subscriber_count": 125000,
+      "niche": "Tech & SaaS",
+      "bio": "Verified DealLink creator profile exploring modern software tools, productivity apps, and brand integrations.",
+      "created_at": "2026-08-23T15:20:00.000Z"
+    },
+    {
+      "id": "creator-seed-1",
+      "name": "Alex Rivera",
+      "email": "alex@techreviewshq.com",
+      "password_hash": "creator123",
+      "channel_url": "https://youtube.com/@TechReviewsHQ",
+      "subscriber_count": 85000,
+      "niche": "Tech & SaaS",
+      "bio": "Hands-on deep dives into modern software tools, AI coding assistants, and cloud infrastructure for 85K tech leads and software engineers.",
+      "created_at": "2026-08-11T12:00:00.000Z"
+    },
+    {
+      "id": "creator-seed-2",
+      "name": "Sarah Chen",
+      "email": "sarah@productivitystack.io",
+      "password_hash": "creator123",
+      "channel_url": "https://youtube.com/@ProductivityStack",
+      "subscriber_count": 142000,
+      "niche": "Productivity & Business",
+      "bio": "Workflows, automation, and app reviews for founders, product managers, and remote teams.",
+      "created_at": "2026-08-15T12:00:00.000Z"
+    },
+    {
+      "id": "creator-seed-3",
+      "name": "Marcus Vance",
+      "email": "marcus@codecrafted.dev",
+      "password_hash": "creator123",
+      "channel_url": "https://youtube.com/@CodeCrafted",
+      "subscriber_count": 63000,
+      "niche": "Gaming & Esports",
+      "bio": "Gaming reviews, hardware setups, and streaming strategy tutorials for an engaged gaming audience.",
+      "created_at": "2026-08-18T12:00:00.000Z"
+    },
+    {
+      "id": "creator-seed-4",
+      "name": "Elena Rostova",
+      "email": "elena@growthmatrix.media",
+      "password_hash": "creator123",
+      "channel_url": "https://youtube.com/@GrowthMatrixTech",
+      "subscriber_count": 110000,
+      "niche": "Finance & Investing",
+      "bio": "Evaluating personal finance apps, investment platforms, and budgeting tools for ambitious professionals.",
+      "created_at": "2026-08-20T12:00:00.000Z"
+    },
+    {
+      "id": "creator-seed-5",
+      "name": "David K. Miller",
+      "email": "david@cloudnativeweekly.com",
+      "password_hash": "creator123",
+      "channel_url": "https://youtube.com/@CloudNativeWeekly",
+      "subscriber_count": 47000,
+      "niche": "Lifestyle & Vlogs",
+      "bio": "Digital nomad lifestyle vlogs, work-from-anywhere setups, and travel productivity gear reviews.",
+      "created_at": "2026-08-22T12:00:00.000Z"
+    }
+  ],
+  "business_leads": [
+    {
+      "id": "lead-seed-1",
+      "name": "Jordan Blake",
+      "company": "Vectra Brand Tools",
+      "email": "jordan@vectra.ai",
+      "website": "https://vectra.ai",
+      "promotion_needs": "We are launching our v2 creator workflow tool and looking for 3-5 creators with 20k-100k followers across tech, productivity, and finance for dedicated video/podcast integrations.",
+      "created_at": "2026-08-21T12:00:00.000Z"
+    }
+  ]
+}
