@@ -1,5 +1,6 @@
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/landing/Hero';
+import Connection from '@/components/landing/Connection';
 import NicheMarquee from '@/components/landing/NicheMarquee';
 import HowItWorks from '@/components/landing/HowItWorks';
 import ForCreators from '@/components/landing/ForCreators';
@@ -12,10 +13,11 @@ import Footer from '@/components/Footer';
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col overflow-x-clip">
       <Navbar />
       <main className="flex-1">
         <Hero />
+        <Connection />
         <NicheMarquee />
         <HowItWorks />
         <ForCreators />
