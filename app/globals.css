@@ -1,31 +1,231 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import 'tailwindcss';
 
-@layer base {
-  body {
-    background-color: #E1F5EE;
-    color: #2C2C2A;
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    -webkit-font-smoothing: antialiased;
+/* ------------------------------------------------------------------ */
+/*  DealLink Design System — light-first, green identity, dark mode    */
+/* ------------------------------------------------------------------ */
+
+:root {
+  /* Core greens */
+  --primary: #04342c;            /* deep pine  — headings, dark sections */
+  --primary-2: #0f6e56;          /* mid green  — primary buttons */
+  --accent: #1d9e75;             /* emerald    — highlights, glows, pings */
+  --accent-soft: #4ccb9c;        /* bright emerald — dark-mode accent, gradients */
+
+  /* Neutrals (light) */
+  --background: #fafdfb;         /* near-white w/ green tint — page bg */
+  --foreground: #071f18;         /* ink — headings */
+  --surface: #ffffff;            /* cards */
+  --mint: #e7f5ee;               /* soft mint — alternating sections */
+  --mint-2: #f0f9f4;             /* lighter mint — chip surfaces */
+  --muted: #5b6b64;              /* body text */
+  --muted-2: #8a9a92;            /* tertiary text */
+  --border: rgba(6, 35, 28, 0.1);   /* hairline border */
+  --border-strong: rgba(6, 35, 28, 0.16);
+  --glow: rgba(29, 158, 117, 0.1);  /* green ambient glow */
+
+  /* Semantic */
+  --success: #1d9e75;
+  --danger: #dc2626;
+  --warning: #d97706;
+
+  /* Niche accents (8-category system) */
+  --c-tech: #06b6d4;
+  --c-gaming: #8b5cf6;
+  --c-finance: #10b981;
+  --c-productivity: #f59e0b;
+  --c-lifestyle: #f97316;
+  --c-fitness: #84cc16;
+  --c-beauty: #ec4899;
+  --c-education: #3b82f6;
+}
+
+.dark {
+  --background: #05120d;
+  --foreground: #eef6f1;
+  --surface: #0b1d16;
+  --mint: #0a1b15;
+  --mint-2: #0e241c;
+  --muted: #9db0a7;
+  --muted-2: #6f837a;
+  --primary: #0f6e56;
+  --primary-2: #1d9e75;
+  --accent: #3ddca6;
+  --accent-soft: #6ee7bd;
+  --border: rgba(238, 246, 241, 0.1);
+  --border-strong: rgba(238, 246, 241, 0.18);
+  --glow: rgba(61, 220, 166, 0.12);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-mint: var(--mint);
+  --color-mint-2: var(--mint-2);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+  --color-primary: var(--primary);
+  --color-primary-2: var(--primary-2);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-glow: var(--glow);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-c-tech: var(--c-tech);
+  --color-c-gaming: var(--c-gaming);
+  --color-c-finance: var(--c-finance);
+  --color-c-productivity: var(--c-productivity);
+  --color-c-lifestyle: var(--c-lifestyle);
+  --color-c-fitness: var(--c-fitness);
+  --color-c-beauty: var(--c-beauty);
+  --color-c-education: var(--c-education);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --shadow-soft: 0 1px 3px rgba(6, 35, 28, 0.05);
+  --shadow-mid: 0 4px 20px rgba(6, 35, 28, 0.07);
+  --shadow-high: 0 12px 40px rgba(6, 35, 28, 0.12);
+  --shadow-lift: 0 20px 60px rgba(6, 35, 28, 0.16);
+
+  --animate-marquee: marquee 32s linear infinite;
+  --animate-marquee-reverse: marquee-reverse 36s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-slow: float 9s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 3s ease-in-out infinite;
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes marquee-reverse {
+    from { transform: translateX(-50%); }
+    to { transform: translateX(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
   }
 }
 
-/* Custom smooth scrolling and scroll offset */
-html {
-  scroll-behavior: smooth;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--muted);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--accent) 25%, transparent);
+    color: var(--foreground);
+  }
+
+  /* Thin scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--border-strong);
+    border-radius: 9999px;
+  }
+
+  :focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--accent) 60%, transparent);
+    outline-offset: 2px;
+  }
 }
 
-/* Custom utility for clean flat cards without gradients/heavy shadows */
-.deal-card {
-  background-color: #FFFFFF;
-  border: 1px solid #CBDED7;
-  border-radius: 10px;
+@layer components {
+  /* Section eyebrow badge */
+  .dl-badge {
+    @apply inline-flex items-center gap-2 rounded-full border border-border bg-mint-2 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-muted;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-primary-2 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-primary hover:shadow-mid disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  /* Secondary / ghost button */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-transparent px-6 py-3 text-sm font-semibold text-foreground transition-all duration-200 hover:border-border-strong hover:bg-mint;
+  }
+
+  /* Card */
+  .dl-card {
+    @apply rounded-2xl border border-border bg-surface shadow-soft;
+  }
+
+  /* Field label */
+  .dl-label {
+    @apply mb-2 block text-xs font-semibold uppercase tracking-wider text-muted;
+  }
+
+  /* Input */
+  .dl-input {
+    @apply w-full rounded-xl border border-border bg-mint-2 px-4 py-3 text-sm font-medium text-foreground placeholder:text-muted-2 transition-all duration-200 focus:border-accent/50 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/20;
+  }
+
+  /* Legacy support until all pages are migrated */
+  .deal-card {
+    @apply rounded-xl border border-border bg-surface shadow-soft;
+  }
+  .deal-card-dark {
+    @apply rounded-xl border border-primary-2 bg-primary text-white;
+  }
 }
 
-.deal-card-dark {
-  background-color: #04342C;
-  border: 1px solid #0F6E56;
-  border-radius: 10px;
-  color: #FFFFFF;
+/* Ambient grid texture */
+.bg-dot-grid {
+  background-image: radial-gradient(color-mix(in oklab, var(--foreground) 7%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.bg-dot-grid-fade {
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%);
+}
+
+/* Green gradient text */
+.text-gradient-accent {
+  background: linear-gradient(120deg, var(--accent) 0%, var(--accent-soft) 50%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

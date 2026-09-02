@@ -1,43 +1,89 @@
 import { NextResponse } from 'next/server';
-import { getCreatorById, updateCreator } from '@/lib/db';
-import { cookies } from 'next/headers';
+import { auth } from '@/auth';
+import { dbConnect, User } from '@/lib/mongo';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const cookieStore = cookies();
-    const creatorId = cookieStore.get('deallink_creator_id')?.value;
+    const session = await auth();
 
-    if (!creatorId) {
+    if (!session?.user?.id) {
       return NextResponse.json({ authenticated: false }, { status: 401 });
     }
 
-    const creator = getCreatorById(creatorId);
-    if (!creator) {
+    await dbConnect();
+    const user = await User.findById(session.user.id);
+
+    if (!user) {
       return NextResponse.json({ authenticated: false }, { status: 401 });
     }
 
-    return NextResponse.json({ authenticated: true, creator });
+    return NextResponse.json({
+      authenticated: true,
+      creator: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        emailVerified: Boolean(user.emailVerified),
+        channel_url: user.channelUrl || '',
+        subscriber_count: user.subscriberCount || 0,
+        niche: user.niche || 'Tech & SaaS',
+        bio: user.bio || '',
+        created_at: user.createdAt,
+      },
+    });
   } catch (error: any) {
-    return NextResponse.json({ error: error?.message || 'Failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || 'Failed to load profile' },
+      { status: 500 }
+    );
   }
 }
 
 export async function PUT(req: Request) {
   try {
-    const cookieStore = cookies();
-    const creatorId = cookieStore.get('deallink_creator_id')?.value;
+    const session = await auth();
 
-    if (!creatorId) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json();
-    const updated = updateCreator(creatorId, body);
+    await dbConnect();
 
-    return NextResponse.json({ success: true, creator: updated });
+    const user = await User.findById(session.user.id);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found.' }, { status: 404 });
+    }
+
+    if (body.name !== undefined) user.name = body.name;
+    if (body.channel_url !== undefined) user.channelUrl = body.channel_url;
+    if (body.subscriber_count !== undefined)
+      user.subscriberCount = Number(body.subscriber_count) || 0;
+    if (body.niche !== undefined) user.niche = body.niche;
+    if (body.bio !== undefined) user.bio = body.bio;
+
+    await user.save();
+
+    return NextResponse.json({
+      success: true,
+      creator: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        emailVerified: Boolean(user.emailVerified),
+        channel_url: user.channelUrl || '',
+        subscriber_count: user.subscriberCount || 0,
+        niche: user.niche || 'Tech & SaaS',
+        bio: user.bio || '',
+        created_at: user.createdAt,
+      },
+    });
   } catch (error: any) {
-    return NextResponse.json({ error: error?.message || 'Failed to update profile' }, { status: 400 });
+    return NextResponse.json(
+      { error: error?.message || 'Failed to update profile' },
+      { status: 400 }
+    );
   }
 }

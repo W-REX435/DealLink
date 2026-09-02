@@ -1,22 +1,24 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import Footer from '@/components/Footer';
 import Link from 'next/link';
 import { useState } from 'react';
-import { CheckCircle2, ArrowRight, User, Mail, Lock, Link as LinkIcon, BarChart2, Tag, FileText, Sparkles } from 'lucide-react';
-import Logo from '@/components/Logo';
-
-const Navbar = dynamic(() => import('@/components/Navbar'), {
-  ssr: false,
-  loading: () => (
-    <header className="bg-[#04342C] text-white border-b border-[#0F6E56] h-20 flex items-center sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex items-center justify-between">
-        <Logo size="md" variant="color" />
-      </div>
-    </header>
-  ),
-});
+import { motion } from 'framer-motion';
+import {
+  CheckCircle2,
+  ArrowRight,
+  User,
+  Mail,
+  LinkIcon,
+  BarChart2,
+  Tag,
+  FileText,
+  Sparkles,
+  Loader2,
+  AlertCircle,
+} from 'lucide-react';
+import AuthLayout from '@/components/auth/AuthLayout';
+import PasswordInput from '@/components/auth/PasswordInput';
+import GoogleButton from '@/components/auth/GoogleButton';
 
 const NICHES = [
   'Tech & SaaS',
@@ -41,10 +43,10 @@ export default function CreatorSignup() {
     niche: NICHES[0],
     bio: '',
   });
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [registeredCreator, setRegisteredCreator] = useState<any | null>(null);
+  const [emailConfigured, setEmailConfigured] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +54,7 @@ export default function CreatorSignup() {
     setError('');
 
     try {
-      const res = await fetch('/api/creators/signup', {
+      const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -64,6 +66,7 @@ export default function CreatorSignup() {
         throw new Error(data.error || 'Registration failed.');
       }
 
+      setEmailConfigured(Boolean(data.emailConfigured));
       setRegisteredCreator(data.creator);
     } catch (err: any) {
       setError(err.message || 'Something went wrong during sign-up.');
@@ -72,261 +75,281 @@ export default function CreatorSignup() {
     }
   };
 
-  return (
-    <div className="min-h-screen flex flex-col bg-[#E1F5EE]">
-      <Navbar />
+  if (registeredCreator) {
+    return (
+      <AuthLayout
+        title="You're in!"
+        subtitle="Your profile is now part of DealLink's creator network."
+        sideTitle="Welcome to the network."
+        sidePoints={[
+          'Your profile is live in the creator network',
+          'Brands in your niche can now find you',
+          "We'll email you as soon as a match lands",
+        ]}
+      >
+        <div className="text-center">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 18, delay: 0.15 }}
+            className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/10"
+          >
+            <CheckCircle2 className="h-8 w-8 text-accent" />
+          </motion.div>
 
-      <main className="flex-1 py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
-        {registeredCreator ? (
-          /* Solid Post-Submit Confirmation Screen */
-          <div className="deal-card p-8 sm:p-12 bg-white border border-[#CBDED7] space-y-8 text-center shadow-sm">
-            <div className="w-16 h-16 bg-[#E1F5EE] border-2 border-[#1D9E75] rounded-full flex items-center justify-center mx-auto text-[#0F6E56]">
-              <CheckCircle2 className="w-10 h-10 text-[#1D9E75]" />
-            </div>
+          <h3 className="mt-6 text-2xl font-semibold tracking-tight text-foreground">
+            Welcome, {registeredCreator.name?.split(' ')[0]}!
+          </h3>
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">
+            We&apos;ll reach out as soon as we have a brand match for you in{' '}
+            <span className="font-semibold text-foreground">{registeredCreator.niche}</span>.
+          </p>
 
-            <div className="space-y-3 max-w-2xl mx-auto">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#E1F5EE] text-[#0F6E56] rounded-full text-xs font-bold uppercase tracking-wider">
-                Registration Confirmed
-              </span>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-[#04342C]">
-                You&apos;re in.
-              </h1>
-              <p className="text-[#2C2C2A] text-lg sm:text-xl font-medium leading-relaxed">
-                Your profile is now part of DealLink&apos;s creator network. We&apos;ll reach out as soon as we have a brand match for you.
+          {emailConfigured && (
+            <div className="mt-5 rounded-xl border border-accent/25 bg-accent/5 p-4 text-left">
+              <p className="flex items-start gap-2.5 text-sm text-muted">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                <span>
+                  We sent a verification link to{' '}
+                  <strong className="text-foreground">{registeredCreator.email}</strong>.
+                  Confirm your email to activate your profile.
+                </span>
               </p>
             </div>
+          )}
 
-            {/* Profile summary card */}
-            <div className="bg-[#04342C] text-white p-6 rounded-xl text-left max-w-xl mx-auto space-y-3 border border-[#0F6E56]">
-              <div className="flex items-center justify-between border-b border-[#0F6E56] pb-3">
-                <div>
-                  <h3 className="font-bold text-lg text-white">{registeredCreator.name}</h3>
-                  <p className="text-xs text-emerald-200">{registeredCreator.email}</p>
-                </div>
-                <span className="px-2.5 py-1 bg-[#0F6E56] text-emerald-100 rounded-full text-xs font-semibold">
-                  {registeredCreator.niche}
+          {!emailConfigured && (
+            <div className="mt-5 rounded-xl border border-warning/30 bg-warning/10 p-4 text-left">
+              <p className="text-sm text-muted">
+                Email delivery isn&apos;t configured yet — ask the admin to set up
+                SMTP, or log in directly.
+              </p>
+            </div>
+          )}
+
+          {/* Profile summary */}
+          <div className="mt-7 rounded-2xl bg-primary p-5 text-left text-white">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="min-w-0">
+                <p className="truncate font-semibold">{registeredCreator.name}</p>
+                <p className="truncate text-xs text-white/50">{registeredCreator.email}</p>
+              </div>
+              <span className="ml-3 shrink-0 rounded-full border border-accent/40 bg-accent/15 px-2.5 py-1 text-xs font-semibold text-accent-soft">
+                {registeredCreator.niche}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-4 pt-4 text-xs">
+              <div className="min-w-0">
+                <span className="block font-semibold text-accent-soft">Channel link</span>
+                <span className="mt-0.5 block truncate text-white/70">
+                  {registeredCreator.channel_url}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div>
-                  <span className="text-emerald-300 block font-semibold">Channel / Profile Link:</span>
-                  <a
-                    href={registeredCreator.channel_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-white hover:underline truncate block"
-                  >
-                    {registeredCreator.channel_url}
-                  </a>
-                </div>
-                <div>
-                  <span className="text-emerald-300 block font-semibold">Followers / Audience:</span>
-                  <span className="text-white font-bold">{Number(registeredCreator.subscriber_count).toLocaleString()}</span>
-                </div>
+              <div>
+                <span className="block font-semibold text-accent-soft">Audience</span>
+                <span className="mt-0.5 block font-bold text-white">
+                  {Number(registeredCreator.subscriber_count).toLocaleString()}
+                </span>
               </div>
-              {registeredCreator.bio && (
-                <div className="pt-2 text-xs border-t border-[#0F6E56]/60 text-emerald-100/90">
-                  <span className="text-emerald-300 block font-semibold mb-0.5">Bio:</span>
-                  <p className="italic">&quot;{registeredCreator.bio}&quot;</p>
-                </div>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                href="/creator/dashboard"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#0F6E56] hover:bg-[#1D9E75] text-white font-bold px-7 py-3 rounded-lg border border-[#1D9E75] transition-all"
-              >
-                <span>View & Edit Your Profile</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                href="/"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-[#CBDED7] text-[#04342C] hover:bg-[#E1F5EE] font-semibold px-6 py-3 rounded-lg transition-all text-sm"
-              >
-                Return to Homepage
-              </Link>
-            </div>
-
-            <p className="text-xs text-[#5A6561]">
-              Need to make updates later? You can log back into your DealLink profile anytime using your email and password.
-            </p>
-          </div>
-        ) : (
-          /* Registration Form */
-          <div className="space-y-6">
-            
-            {/* Header banner */}
-            <div className="text-center space-y-3">
-              <div className="inline-flex items-center gap-2 bg-[#04342C] text-emerald-300 px-3.5 py-1.5 rounded-full text-xs font-semibold border border-[#0F6E56]">
-                <Sparkles className="w-4 h-4 text-[#1D9E75]" />
-                <span>Creator Registration</span>
-              </div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-[#04342C]">
-                Join the DealLink Creator Network
-              </h1>
-              <p className="text-[#5A6561] text-sm sm:text-base max-w-xl mx-auto">
-                Get matched with brands looking for authentic sponsorships in your niche. Open to all content platforms. Zero upfront fees.
-              </p>
-            </div>
-
-            <div className="deal-card p-6 sm:p-10 bg-white border border-[#CBDED7]">
-              {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg font-medium">
-                  {error}
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                
-                {/* Personal Info */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#04342C] mb-1.5 flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-[#0F6E56]" />
-                      <span>Full Name *</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Alex Morgan"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#CBDED7] rounded-lg text-sm text-[#2C2C2A] focus:outline-none focus:border-[#0F6E56]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#04342C] mb-1.5 flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5 text-[#0F6E56]" />
-                      <span>Email Address *</span>
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="alex@creator.com"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#CBDED7] rounded-lg text-sm text-[#2C2C2A] focus:outline-none focus:border-[#0F6E56]"
-                    />
-                  </div>
-                </div>
-
-                {/* Password & Profile link */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#04342C] mb-1.5 flex items-center gap-1.5">
-                      <Lock className="w-3.5 h-3.5 text-[#0F6E56]" />
-                      <span>Password *</span>
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="Choose a password"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#CBDED7] rounded-lg text-sm text-[#2C2C2A] focus:outline-none focus:border-[#0F6E56]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#04342C] mb-1.5 flex items-center gap-1.5">
-                      <LinkIcon className="w-3.5 h-3.5 text-[#0F6E56]" />
-                      <span>Channel / Profile Link *</span>
-                    </label>
-                    <input
-                      type="url"
-                      required
-                      placeholder="https://youtube.com/@channel or instagram/tiktok link"
-                      value={formData.channel_url}
-                      onChange={(e) => setFormData({ ...formData, channel_url: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#CBDED7] rounded-lg text-sm text-[#2C2C2A] focus:outline-none focus:border-[#0F6E56]"
-                    />
-                  </div>
-                </div>
-
-                {/* Subscriber / Follower Count & Niche */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#04342C] mb-1.5 flex items-center gap-1.5">
-                      <BarChart2 className="w-3.5 h-3.5 text-[#0F6E56]" />
-                      <span>Follower / Subscriber Count *</span>
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      placeholder="e.g. 45000"
-                      value={formData.subscriber_count}
-                      onChange={(e) => setFormData({ ...formData, subscriber_count: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#CBDED7] rounded-lg text-sm text-[#2C2C2A] focus:outline-none focus:border-[#0F6E56]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#04342C] mb-1.5 flex items-center gap-1.5">
-                      <Tag className="w-3.5 h-3.5 text-[#0F6E56]" />
-                      <span>Niche / Category *</span>
-                    </label>
-                    <select
-                      value={formData.niche}
-                      onChange={(e) => setFormData({ ...formData, niche: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#CBDED7] rounded-lg text-sm text-[#2C2C2A] focus:outline-none focus:border-[#0F6E56]"
-                    >
-                      {NICHES.map((n) => (
-                        <option key={n} value={n}>
-                          {n}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Bio */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#04342C] mb-1.5 flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5 text-[#0F6E56]" />
-                    <span>Short Bio / Channel Overview</span>
-                  </label>
-                  <textarea
-                    rows={3}
-                    placeholder="Briefly describe your content, primary platform, target audience demographic, or past sponsorships..."
-                    value={formData.bio}
-                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#CBDED7] rounded-lg text-sm text-[#2C2C2A] focus:outline-none focus:border-[#0F6E56] resize-none"
-                  />
-                </div>
-
-                {/* Submit button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3.5 px-6 bg-[#0F6E56] hover:bg-[#1D9E75] text-white font-bold text-base rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
-                >
-                  {loading ? (
-                    <span>Registering...</span>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5 text-emerald-300" />
-                      <span>Complete Creator Registration</span>
-                    </>
-                  )}
-                </button>
-
-                <div className="pt-2 text-center text-xs text-[#5A6561]">
-                  Already registered?{' '}
-                  <Link href="/creator/login" className="text-[#0F6E56] font-semibold hover:underline">
-                    Log in here to manage your profile
-                  </Link>
-                </div>
-              </form>
             </div>
           </div>
-        )}
-      </main>
 
-      <Footer />
-    </div>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/creator/login"
+              className="btn-primary group flex-1 py-3.5"
+            >
+              Go to login
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <Link href="/" className="btn-ghost flex-1 py-3.5">
+              Back to home
+            </Link>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  return (
+    <AuthLayout
+      title="Join the creator network"
+      subtitle="Get matched with brands looking for authentic sponsorships in your niche. Open to all platforms. Zero upfront fees."
+      sideTitle="Turn your audience into sponsorship revenue."
+      sidePoints={[
+        'Free registration in under 2 minutes',
+        'Hand-curated brand matches, never spam',
+        '100% creative control — always',
+        'You get paid, then we get paid',
+      ]}
+    >
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-5 flex items-start gap-2.5 rounded-xl border border-danger/25 bg-danger/5 p-3.5 text-sm font-medium text-danger"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{error}</span>
+        </motion.div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="name" className="dl-label">
+              Full name
+            </label>
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+              <input
+                id="name"
+                type="text"
+                required
+                placeholder="Alex Morgan"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="dl-input pl-11"
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="email" className="dl-label">
+              Email address
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+              <input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="alex@creator.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="dl-input pl-11"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <PasswordInput
+            id="password"
+            value={formData.password}
+            onChange={(password) => setFormData({ ...formData, password })}
+            placeholder="Min. 8 characters"
+            autoComplete="new-password"
+            label="Password"
+          />
+          <div>
+            <label htmlFor="channel" className="dl-label">
+              Channel / profile link
+            </label>
+            <div className="relative">
+              <LinkIcon className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+              <input
+                id="channel"
+                type="url"
+                required
+                placeholder="https://youtube.com/@channel"
+                value={formData.channel_url}
+                onChange={(e) =>
+                  setFormData({ ...formData, channel_url: e.target.value })
+                }
+                className="dl-input pl-11"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="subs" className="dl-label">
+              Follower / subscriber count
+            </label>
+            <div className="relative">
+              <BarChart2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+              <input
+                id="subs"
+                type="number"
+                required
+                min="0"
+                placeholder="45000"
+                value={formData.subscriber_count}
+                onChange={(e) =>
+                  setFormData({ ...formData, subscriber_count: e.target.value })
+                }
+                className="dl-input pl-11"
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="niche" className="dl-label">
+              Niche / category
+            </label>
+            <div className="relative">
+              <Tag className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+              <select
+                id="niche"
+                value={formData.niche}
+                onChange={(e) => setFormData({ ...formData, niche: e.target.value })}
+                className="dl-input appearance-none pl-11"
+              >
+                {NICHES.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="bio" className="dl-label">
+            Short bio / channel overview{' '}
+            <span className="font-normal normal-case text-muted-2">(optional)</span>
+          </label>
+          <div className="relative">
+            <FileText className="absolute left-4 top-3.5 h-4 w-4 text-muted-2" />
+            <textarea
+              id="bio"
+              rows={3}
+              placeholder="Briefly describe your content, primary platform, target audience, or past sponsorships..."
+              value={formData.bio}
+              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+              className="dl-input resize-none pl-11"
+            />
+          </div>
+        </div>
+
+        <button type="submit" disabled={loading} className="btn-primary w-full py-3.5">
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Creating your profile...
+            </>
+          ) : (
+            <>
+              <Sparkles className="h-4 w-4" />
+              Join the network — it&apos;s free
+            </>
+          )}
+        </button>
+      </form>
+
+      <GoogleButton />
+
+      <div className="pt-1 text-center text-sm text-muted">
+          Already registered?{' '}
+          <Link
+            href="/creator/login"
+            className="font-semibold text-accent transition-colors hover:text-foreground"
+          >
+            Log in
+          </Link>
+        </div>
+    </AuthLayout>
   );
 }

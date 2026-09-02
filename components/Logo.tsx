@@ -7,69 +7,68 @@ interface LogoProps {
   variant?: 'light' | 'dark' | 'color';
 }
 
+const sizes = {
+  sm: { icon: 28, text: 'text-base' },
+  md: { icon: 36, text: 'text-xl' },
+  lg: { icon: 48, text: 'text-2xl' },
+};
+
 export default function Logo({
   className = '',
   iconOnly = false,
   size = 'md',
   variant = 'color',
 }: LogoProps) {
-  // Dimensions
-  const sizes = {
-    sm: { icon: 28, text: 'text-lg' },
-    md: { icon: 36, text: 'text-2xl' },
-    lg: { icon: 48, text: 'text-3xl' },
-  };
-
   const { icon, text } = sizes[size];
 
-  // Color variants for text
-  const textColors = {
-    color: 'text-white',
-    dark: 'text-[#04342C]',
-    light: 'text-white',
-  };
+  const wordmark = variant === 'light' ? 'text-white' : 'text-foreground';
 
   return (
-    <div className={`inline-flex items-center gap-3 ${className}`}>
-      {/* Interlocking Rings Emblem */}
+    <div className={`group inline-flex items-center gap-2.5 ${className}`}>
+      {/* Emblem: rounded-square gradient tile with interlocking rings */}
       <svg
         width={icon}
         height={icon}
-        viewBox="0 0 44 28"
+        viewBox="0 0 40 40"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="shrink-0"
+        className="shrink-0 drop-shadow-sm transition-transform duration-300 group-hover:scale-[1.04]"
       >
-        {/* Left Ring */}
-        <circle
-          cx="15"
-          cy="14"
-          r="10"
-          stroke="#0F6E56"
-          strokeWidth="4"
-          className="transition-colors group-hover:stroke-[#1D9E75]"
+        <defs>
+          <linearGradient id="dl-emblem" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#0F6E56" />
+            <stop offset="1" stopColor="#1D9E75" />
+          </linearGradient>
+        </defs>
+        <rect x="1" y="1" width="38" height="38" rx="11" fill="url(#dl-emblem)" />
+        <rect
+          x="1"
+          y="1"
+          width="38"
+          height="38"
+          rx="11"
+          stroke="white"
+          strokeOpacity="0.14"
         />
-        {/* Right Ring */}
+        {/* Left ring */}
+        <circle cx="16.5" cy="20" r="7" stroke="white" strokeWidth="2.6" />
+        {/* Right ring */}
         <circle
-          cx="29"
-          cy="14"
-          r="10"
-          stroke="#1D9E75"
-          strokeWidth="4"
-          className="transition-colors group-hover:stroke-[#26C296]"
-        />
-        {/* Overlap Interlock effect */}
-        <path
-          d="M20 7.5 C 22 9.5, 23 11, 23 14 C 23 17, 22 18.5, 20 20.5"
-          stroke="#0F6E56"
-          strokeWidth="4"
-          strokeLinecap="round"
+          cx="24.5"
+          cy="20"
+          r="7"
+          stroke="#8FF0C9"
+          strokeWidth="2.6"
+          className="transition-all duration-300 group-hover:stroke-[#B8F7DC]"
         />
       </svg>
 
       {!iconOnly && (
-        <span className={`font-bold tracking-tight ${text} ${textColors[variant]}`}>
-          Deal<span className="text-[#1D9E75]">Link</span>
+        <span className={`${text} font-semibold tracking-tight ${wordmark}`}>
+          Deal
+          <span className="text-accent transition-colors group-hover:text-accent-soft">
+            Link
+          </span>
         </span>
       )}
     </div>

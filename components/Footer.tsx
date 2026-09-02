@@ -2,88 +2,137 @@
 
 import Link from 'next/link';
 import { Mail, Shield, Youtube, Twitter, Linkedin } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import Logo from './Logo';
 
 export default function Footer() {
-  const [year, setYear] = useState<number>(2026);
-
-  useEffect(() => {
-    setYear(new Date().getFullYear());
-  }, []);
-
   return (
-    <footer className="bg-[#042C53] text-emerald-100 border-t border-[#0F6E56] pt-16 pb-12 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-[#0F6E56]/40">
-          
-          {/* Brand Info */}
-          <div className="md:col-span-2 space-y-4">
-            <Link href="/" className="inline-block group">
-              <Logo size="md" variant="color" />
+    <footer id="contact" className="mt-auto border-t border-border bg-primary text-white/70">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+        <div className="grid gap-12 pb-12 md:grid-cols-12">
+          {/* Brand */}
+          <div className="space-y-5 md:col-span-5">
+            <Link href="/" className="inline-block">
+              <Logo size="md" variant="light" />
             </Link>
-            <p className="text-emerald-200/80 text-sm max-w-md leading-relaxed">
-              Connecting tech and SaaS content creators with businesses looking for authentic sponsorships, high engagement, and real audience reach.
+            <p className="max-w-sm text-sm leading-relaxed text-white/50">
+              The bridge between content creators and the brands that need
+              them. Authentic sponsorships, real audience reach, and
+              performance-backed results — in any niche, on any platform.
             </p>
-            <div className="pt-2 text-xs text-emerald-300 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#1D9E75]"></span>
-              <span>Professional B2B Creator Marketplace</span>
+            <div className="flex items-center gap-2.5">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-soft opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-accent-soft" />
+              </span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-accent-soft">
+                Accepting new creators
+              </span>
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <div className="space-y-3">
-            <h4 className="text-white text-sm font-semibold uppercase tracking-wider">Platform</h4>
-            <ul className="space-y-2 text-sm text-emerald-200/80">
+          {/* Platform */}
+          <div className="md:col-span-2">
+            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
+              Platform
+            </h4>
+            <ul className="space-y-3 text-sm">
               <li>
-                <Link href="/#how-it-works" className="hover:text-white transition-colors">How it works</Link>
+                <Link href="/#how-it-works" className="transition-colors hover:text-white">
+                  How it works
+                </Link>
               </li>
               <li>
-                <Link href="/#for-creators" className="hover:text-white transition-colors">For Tech Creators</Link>
+                <Link href="/#creators" className="transition-colors hover:text-white">
+                  For creators
+                </Link>
               </li>
               <li>
-                <Link href="/#for-businesses" className="hover:text-white transition-colors">For Businesses & SaaS</Link>
+                <Link href="/#marketplace" className="transition-colors hover:text-white">
+                  Marketplace
+                </Link>
               </li>
               <li>
-                <Link href="/creator/signup" className="hover:text-white transition-colors font-medium text-emerald-300">Creator Registration</Link>
+                <Link href="/#businesses" className="transition-colors hover:text-white">
+                  For businesses
+                </Link>
+              </li>
+              <li>
+                <Link href="/#faq" className="transition-colors hover:text-white">
+                  FAQ
+                </Link>
               </li>
             </ul>
           </div>
 
-          {/* Contact & Socials */}
-          <div id="contact" className="space-y-3">
-            <h4 className="text-white text-sm font-semibold uppercase tracking-wider">Contact & Connect</h4>
-            <div className="text-sm space-y-2">
-              <a href="mailto:contact@deallink.co" className="flex items-center gap-2 text-emerald-200 hover:text-white transition-colors">
-                <Mail className="w-4 h-4 text-[#1D9E75]" />
-                <span>contact@deallink.co</span>
-              </a>
-              <div className="flex items-center gap-3 pt-2 text-emerald-300">
-                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-[#04342C] hover:bg-[#0F6E56] transition-colors" aria-label="Twitter">
-                  <Twitter className="w-4 h-4" />
+          {/* Account */}
+          <div className="md:col-span-2">
+            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
+              Account
+            </h4>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link href="/creator/signup" className="transition-colors hover:text-white">
+                  Join as creator
+                </Link>
+              </li>
+              <li>
+                <Link href="/creator/login" className="transition-colors hover:text-white">
+                  Creator login
+                </Link>
+              </li>
+              <li>
+                <Link href="/creator/dashboard" className="transition-colors hover:text-white">
+                  Dashboard
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div className="md:col-span-3">
+            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
+              Contact & connect
+            </h4>
+            <a
+              href="mailto:contact@deallink.co"
+              className="flex items-center gap-2.5 text-sm transition-colors hover:text-white"
+            >
+              <Mail className="h-4 w-4 text-accent-soft" />
+              contact@deallink.co
+            </a>
+            <div className="mt-5 flex items-center gap-2.5">
+              {[
+                { icon: Twitter, label: 'Twitter' },
+                { icon: Youtube, label: 'YouTube' },
+                { icon: Linkedin, label: 'LinkedIn' },
+              ].map((social) => (
+                <a
+                  key={social.label}
+                  href={`https://${social.label.toLowerCase()}.com`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.label}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition-all hover:border-accent/40 hover:text-white"
+                >
+                  <social.icon className="h-4 w-4" />
                 </a>
-                <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-[#04342C] hover:bg-[#0F6E56] transition-colors" aria-label="YouTube">
-                  <Youtube className="w-4 h-4" />
-                </a>
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-[#04342C] hover:bg-[#0F6E56] transition-colors" aria-label="LinkedIn">
-                  <Linkedin className="w-4 h-4" />
-                </a>
-              </div>
+              ))}
             </div>
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-emerald-200/60">
-          <p>© {year} DealLink Inc. All rights reserved.</p>
-          
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs text-white/40 sm:flex-row">
+          <p>© {new Date().getFullYear()} DealLink Inc. All rights reserved.</p>
           <div className="flex items-center gap-6">
-            <span>Privacy Policy</span>
-            <span>Terms of Service</span>
-            {/* Internal Admin portal link for Rex */}
-            <Link href="/admin" className="inline-flex items-center gap-1 text-emerald-400 hover:text-white transition-colors">
-              <Shield className="w-3.5 h-3.5 text-[#1D9E75]" />
-              <span>Internal Admin View</span>
+            <span className="transition-colors hover:text-white/70">Privacy Policy</span>
+            <span className="transition-colors hover:text-white/70">Terms of Service</span>
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-1.5 text-white/50 transition-colors hover:text-white"
+            >
+              <Shield className="h-3.5 w-3.5 text-accent-soft" />
+              Admin
             </Link>
           </div>
         </div>

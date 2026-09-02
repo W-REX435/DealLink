@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import Footer from '@/components/Footer';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import {
   UserCheck,
   Edit3,
@@ -124,9 +125,8 @@ export default function CreatorDashboard() {
     }
   };
 
-  const handleLogout = async () => {
-    await fetch('/api/creators/logout', { method: 'POST' });
-    router.push('/');
+  const handleLogout = () => {
+    signOut({ callbackUrl: '/' });
   };
 
   if (loading) {

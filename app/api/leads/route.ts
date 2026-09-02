@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createBusinessLead } from '@/lib/db';
+import { dbConnect, BusinessLead } from '@/lib/mongo';
 
 export async function POST(req: Request) {
   try {
@@ -8,21 +8,40 @@ export async function POST(req: Request) {
 
     if (!name || !company || !email || !promotion_needs) {
       return NextResponse.json(
-        { error: 'Please provide your name, company, email, and details on what you want to promote.' },
+        {
+          error:
+            'Please provide your name, company, email, and details on what you want to promote.',
+        },
         { status: 400 }
       );
     }
 
-    const lead = createBusinessLead({
-      name,
-      company,
-      email,
-      website: website || '',
-      promotion_needs,
+    await dbConnect();
+    const lead = await BusinessLead.create({
+      name: name.trim(),
+      company: company.trim(),
+      email: email.toLowerCase().trim(),
+      website: (website || '').trim(),
+      promotionNeeds: promotion_needs.trim(),
     });
 
-    return NextResponse.json({ success: true, lead });
+    return NextResponse.json({
+      success: true,
+      lead: {
+        id: lead._id.toString(),
+        name: lead.name,
+        company: lead.company,
+        email: lead.email,
+        website: lead.website,
+        promotion_needs: lead.promotionNeeds,
+        created_at: lead.createdAt,
+      },
+    });
   } catch (error: any) {
-    return NextResponse.json({ error: error?.message || 'Failed to submit inquiry.' }, { status: 500 });
+    console.error('[leads]', error);
+    return NextResponse.json(
+      { error: error?.message || 'Failed to submit inquiry.' },
+      { status: 500 }
+    );
   }
 }
