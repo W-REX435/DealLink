@@ -12,22 +12,49 @@ interface AuthLayoutProps {
   subtitle: string;
   sideTitle: string;
   sidePoints: string[];
+  bg?: 'login' | 'signup';
   footer?: React.ReactNode;
   children: React.ReactNode;
 }
+
+const BACKGROUNDS = {
+  login: { light: '/bg/login-light.webp', dark: '/bg/login-dark.webp' },
+  signup: { light: '/bg/signup-light.webp', dark: '/bg/signup-dark.webp' },
+};
 
 export default function AuthLayout({
   title,
   subtitle,
   sideTitle,
   sidePoints,
+  bg,
   footer,
   children,
 }: AuthLayoutProps) {
+  const background = bg ? BACKGROUNDS[bg] : null;
+
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="relative flex min-h-screen flex-col">
+      {/* Cinematic background with readability overlay */}
+      {background && (
+        <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
+          <img
+            src={background.light}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover dark:hidden"
+          />
+          <img
+            src={background.dark}
+            alt=""
+            className="absolute inset-0 hidden h-full w-full object-cover dark:block"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/25 to-background/85" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background" />
+        </div>
+      )}
+
       {/* Top bar */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/60 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="group flex items-center gap-2">
             <Logo size="md" variant="dark" />
@@ -51,7 +78,11 @@ export default function AuthLayout({
           initial={{ opacity: 0, x: -24 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, ease: EASE }}
-          className="relative hidden overflow-hidden rounded-3xl bg-primary p-10 text-white lg:flex lg:flex-col lg:justify-between"
+          className={`relative hidden overflow-hidden rounded-3xl p-10 text-white lg:flex lg:flex-col lg:justify-between ${
+            background
+              ? 'border border-white/10 bg-primary/75 shadow-high backdrop-blur-lg'
+              : 'bg-primary'
+          }`}
         >
           <div className="bg-dot-grid bg-dot-grid-fade absolute inset-0 opacity-40" />
           <div className="pointer-events-none absolute -top-24 right-[-20%] h-[360px] w-[360px] rounded-full bg-accent/20 blur-[110px]" />

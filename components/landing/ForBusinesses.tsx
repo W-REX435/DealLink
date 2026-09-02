@@ -27,7 +27,7 @@ const BENEFITS = [
 
 export default function ForBusinesses() {
   return (
-    <section id="businesses" className="relative overflow-hidden bg-primary py-20 text-white md:py-28">
+    <section id="businesses" className="relative overflow-hidden bg-primary/95 py-20 text-white md:py-28">
       <div className="bg-dot-grid bg-dot-grid-fade absolute inset-0 opacity-40" />
       <div className="pointer-events-none absolute -left-32 top-0 h-[420px] w-[420px] rounded-full bg-accent/10 blur-[120px]" />
 

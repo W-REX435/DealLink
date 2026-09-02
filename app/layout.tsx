@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import { Analytics } from '@vercel/analytics/next';
+import SiteBackground from '@/components/ui/SiteBackground';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -34,6 +35,7 @@ export default function RootLayout({
         className={`${GeistSans.variable} ${GeistMono.variable} min-h-screen flex flex-col bg-background font-sans antialiased`}
         suppressHydrationWarning
       >
+        <SiteBackground />
         {children}
         <Analytics />
       </body>

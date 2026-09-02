@@ -9,7 +9,7 @@ export default function CTABanner() {
   const reduce = useReducedMotion();
 
   return (
-    <section className="bg-background py-20 md:py-28">
+    <section className="bg-background/75 py-20 md:py-28">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <Reveal>
           <div className="relative overflow-hidden rounded-3xl border border-accent/20 bg-gradient-to-br from-primary via-primary to-primary-2 px-6 py-16 text-center shadow-high sm:px-12 md:py-20">

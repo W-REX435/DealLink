@@ -39,7 +39,7 @@ export default function HowItWorks() {
   const reduce = useReducedMotion();
 
   return (
-    <section id="how-it-works" className="bg-background py-20 md:py-28">
+    <section id="how-it-works" className="bg-background/75 py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <Reveal className="mx-auto mb-14 max-w-2xl text-center">
           <span className="dl-badge">Process</span>

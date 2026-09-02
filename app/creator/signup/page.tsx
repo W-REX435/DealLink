@@ -78,6 +78,7 @@ export default function CreatorSignup() {
   if (registeredCreator) {
     return (
       <AuthLayout
+        bg="signup"
         title="You're in!"
         subtitle="Your profile is now part of DealLink's creator network."
         sideTitle="Welcome to the network."
@@ -173,6 +174,7 @@ export default function CreatorSignup() {
 
   return (
     <AuthLayout
+      bg="signup"
       title="Join the creator network"
       subtitle="Get matched with brands looking for authentic sponsorships in your niche. Open to all platforms. Zero upfront fees."
       sideTitle="Turn your audience into sponsorship revenue."

@@ -41,7 +41,7 @@ export default function Faq() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="bg-background py-20 md:py-28">
+    <section id="faq" className="bg-background/75 py-20 md:py-28">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
         <Reveal className="mb-12 text-center">
           <span className="dl-badge">FAQ</span>

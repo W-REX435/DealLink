@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ------------------------------------------------------------------ */
 /*  DealLink Design System — Trust Indigo + Cyan, light-first + dark   */
 /* ------------------------------------------------------------------ */

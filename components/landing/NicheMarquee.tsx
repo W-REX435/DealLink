@@ -26,7 +26,7 @@ const NICHES = [
 export default function NicheMarquee() {
   const row = [...NICHES, ...NICHES];
   return (
-    <section className="border-b border-border bg-surface py-10">
+    <section className="border-b border-border bg-surface/80 py-10">
       <Reveal className="mx-auto mb-6 max-w-7xl px-4 sm:px-6" y={12}>
         <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-2">
           Every niche. Every platform.

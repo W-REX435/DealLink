@@ -60,7 +60,7 @@ export default function Testimonials() {
   const reduce = useReducedMotion();
 
   return (
-    <section className="border-y border-border bg-soft py-20 md:py-28">
+    <section className="border-y border-border bg-soft/80 py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <Reveal className="mx-auto mb-14 max-w-2xl text-center">
           <span className="dl-badge">Social proof</span>

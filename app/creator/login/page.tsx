@@ -46,6 +46,7 @@ export default function CreatorLogin() {
 
   return (
     <AuthLayout
+      bg="login"
       title="Welcome back"
       subtitle="Log in to manage your profile, track matches, and accept new brand deals."
       sideTitle="Your sponsorships are waiting."

@@ -40,7 +40,7 @@ export default function ForCreators() {
   const reduce = useReducedMotion();
 
   return (
-    <section id="creators" className="border-y border-border bg-soft py-20 md:py-28">
+    <section id="creators" className="border-y border-border bg-soft/80 py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="grid items-center gap-14 lg:grid-cols-2 lg:gap-16">
           {/* Copy */}

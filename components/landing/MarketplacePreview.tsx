@@ -29,7 +29,7 @@ export default function MarketplacePreview() {
   const reduce = useReducedMotion();
 
   return (
-    <section id="marketplace" className="bg-background py-20 md:py-28">
+    <section id="marketplace" className="bg-background/75 py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <Reveal className="mx-auto mb-12 max-w-2xl text-center">
           <span className="dl-badge">Marketplace preview</span>
