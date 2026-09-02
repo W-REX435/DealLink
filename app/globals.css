@@ -1,30 +1,30 @@
 @import 'tailwindcss';
 
 /* ------------------------------------------------------------------ */
-/*  DealLink Design System — Midnight Violet, light-first + dark mode  */
+/*  DealLink Design System — Trust Indigo + Cyan, light-first + dark   */
 /* ------------------------------------------------------------------ */
 
 :root {
-  /* Core violets */
-  --primary: #241c4f;            /* deep indigo — dark sections */
-  --primary-2: #4f46e5;          /* indigo     — primary buttons */
-  --accent: #8b5cf6;             /* violet     — highlights, glows, pings */
-  --accent-soft: #a78bfa;        /* soft violet — dark-mode accent, gradients */
+  /* Core blues */
+  --primary: #0f2a52;            /* deep navy  — dark sections */
+  --primary-2: #2563eb;          /* blue       — primary buttons */
+  --accent: #22d3ee;             /* cyan       — highlights, glows, pings */
+  --accent-soft: #67e8f9;        /* light cyan — dark-mode accent, gradients */
 
   /* Neutrals (light) */
-  --background: #fafafd;         /* near-white w/ violet tint — page bg */
-  --foreground: #151231;         /* ink — headings */
+  --background: #fafcff;         /* near-white w/ blue tint — page bg */
+  --foreground: #0f1b33;         /* ink — headings */
   --surface: #ffffff;            /* cards */
-  --soft: #f1f0fa;               /* soft lavender — alternating sections */
-  --soft-2: #f6f5fc;             /* lighter lavender — chip surfaces */
-  --muted: #5b5b72;              /* body text */
-  --muted-2: #8c8ca3;            /* tertiary text */
-  --border: rgba(21, 18, 49, 0.1);   /* hairline border */
-  --border-strong: rgba(21, 18, 49, 0.16);
-  --glow: rgba(139, 92, 246, 0.12);  /* violet ambient glow */
+  --soft: #eef4fb;               /* soft ice-blue — alternating sections */
+  --soft-2: #f5f8fd;             /* lighter ice-blue — chip surfaces */
+  --muted: #54637d;              /* body text */
+  --muted-2: #8b98ac;            /* tertiary text */
+  --border: rgba(15, 27, 51, 0.1);   /* hairline border */
+  --border-strong: rgba(15, 27, 51, 0.16);
+  --glow: rgba(34, 211, 238, 0.14);  /* cyan ambient glow */
 
   /* Semantic */
-  --success: #22c55e;
+  --success: #14b8a6;
   --danger: #dc2626;
   --warning: #d97706;
 
@@ -36,24 +36,24 @@
   --c-lifestyle: #0ea5e9;
   --c-fitness: #ef4444;
   --c-beauty: #ec4899;
-  --c-education: #6366f1;
+  --c-education: #8b5cf6;
 }
 
 .dark {
-  --background: #0b0916;
-  --foreground: #efedf8;
-  --surface: #141127;
-  --soft: #100d20;
-  --soft-2: #171331;
-  --muted: #a5a1bc;
-  --muted-2: #716c8f;
-  --primary: #4c43d8;
-  --primary-2: #5b52e8;
-  --accent: #a78bfa;
-  --accent-soft: #c4b5fd;
-  --border: rgba(239, 237, 248, 0.1);
-  --border-strong: rgba(239, 237, 248, 0.18);
-  --glow: rgba(167, 139, 250, 0.14);
+  --background: #060b16;
+  --foreground: #edf2fa;
+  --surface: #0d1626;
+  --soft: #0a1220;
+  --soft-2: #101b2e;
+  --muted: #9db0cc;
+  --muted-2: #6b7b96;
+  --primary: #0a1a33;
+  --primary-2: #3b82f6;
+  --accent: #22d3ee;
+  --accent-soft: #67e8f9;
+  --border: rgba(237, 242, 250, 0.1);
+  --border-strong: rgba(237, 242, 250, 0.18);
+  --glow: rgba(34, 211, 238, 0.15);
 }
 
 @theme inline {
@@ -86,10 +86,10 @@
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  --shadow-soft: 0 1px 3px rgba(21, 18, 49, 0.05);
-  --shadow-mid: 0 4px 20px rgba(21, 18, 49, 0.08);
-  --shadow-high: 0 12px 40px rgba(21, 18, 49, 0.14);
-  --shadow-lift: 0 20px 60px rgba(21, 18, 49, 0.18);
+  --shadow-soft: 0 1px 3px rgba(15, 27, 51, 0.05);
+  --shadow-mid: 0 4px 20px rgba(15, 27, 51, 0.08);
+  --shadow-high: 0 12px 40px rgba(15, 27, 51, 0.14);
+  --shadow-lift: 0 20px 60px rgba(15, 27, 51, 0.18);
 
   --animate-marquee: marquee 32s linear infinite;
   --animate-marquee-reverse: marquee-reverse 36s linear infinite;

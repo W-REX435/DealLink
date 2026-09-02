@@ -36,8 +36,8 @@ export default function Logo({
       >
         <defs>
           <linearGradient id="dl-emblem" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#4F46E5" />
-            <stop offset="1" stopColor="#8B5CF6" />
+            <stop stopColor="#2563EB" />
+            <stop offset="1" stopColor="#22D3EE" />
           </linearGradient>
         </defs>
         <rect x="1" y="1" width="38" height="38" rx="11" fill="url(#dl-emblem)" />
@@ -57,9 +57,9 @@ export default function Logo({
           cx="24.5"
           cy="20"
           r="7"
-          stroke="#C4B5FD"
+          stroke="#A5F3FC"
           strokeWidth="2.6"
-          className="transition-all duration-300 group-hover:stroke-[#DDD6FE]"
+          className="transition-all duration-300 group-hover:stroke-[#CFFAFE]"
         />
       </svg>
 
