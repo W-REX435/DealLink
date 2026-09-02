@@ -22,7 +22,7 @@ import Logo from '@/components/Logo';
 const Navbar = dynamic(() => import('@/components/Navbar'), {
   ssr: false,
   loading: () => (
-    <header className="bg-[#04342C] text-white border-b border-[#0F6E56] h-20 flex items-center sticky top-0 z-50">
+    <header className="bg-[#241C4F] text-white border-b border-[#4F46E5] h-20 flex items-center sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex items-center justify-between">
         <Logo size="md" variant="color" />
       </div>
@@ -131,10 +131,10 @@ export default function CreatorDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#E1F5EE]">
+      <div className="min-h-screen flex flex-col bg-[#F1F0FA]">
         <Navbar />
         <main className="flex-1 flex items-center justify-center py-20">
-          <div className="text-[#04342C] font-semibold text-lg animate-pulse">
+          <div className="text-[#241C4F] font-semibold text-lg animate-pulse">
             Loading creator dashboard...
           </div>
         </main>
@@ -144,21 +144,21 @@ export default function CreatorDashboard() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#E1F5EE]">
+    <div className="min-h-screen flex flex-col bg-[#F1F0FA]">
       <Navbar />
 
       <main className="flex-1 py-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
         {/* Header bar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 bg-[#04342C] text-white p-6 rounded-xl border border-[#0F6E56]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 bg-[#241C4F] text-white p-6 rounded-xl border border-[#4F46E5]">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#1D9E75] animate-pulse"></span>
-              <span className="text-xs text-emerald-300 uppercase tracking-wider font-semibold">Active Network Member</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#8B5CF6] animate-pulse"></span>
+              <span className="text-xs text-violet-300 uppercase tracking-wider font-semibold">Active Network Member</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
               Welcome back, {creator?.name}
             </h1>
-            <p className="text-xs text-emerald-200">
+            <p className="text-xs text-violet-200">
               Registered on {new Date(creator?.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
@@ -166,7 +166,7 @@ export default function CreatorDashboard() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0F6E56] hover:bg-[#1D9E75] text-white text-xs font-bold rounded-lg border border-[#1D9E75] transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#4F46E5] hover:bg-[#8B5CF6] text-white text-xs font-bold rounded-lg border border-[#8B5CF6] transition-colors"
             >
               <Edit3 className="w-3.5 h-3.5" />
               <span>{isEditing ? 'Cancel Edit' : 'Edit Profile'}</span>
@@ -182,8 +182,8 @@ export default function CreatorDashboard() {
         </div>
 
         {saveMessage && (
-          <div className="mb-6 p-4 bg-emerald-100 border border-[#1D9E75] text-[#04342C] font-semibold text-sm rounded-lg flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-[#1D9E75]" />
+          <div className="mb-6 p-4 bg-violet-100 border border-[#8B5CF6] text-[#241C4F] font-semibold text-sm rounded-lg flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-[#8B5CF6]" />
             <span>{saveMessage}</span>
           </div>
         )}
@@ -201,15 +201,15 @@ export default function CreatorDashboard() {
           <div className="lg:col-span-8 space-y-6">
             {isEditing ? (
               /* Edit Form */
-              <div className="deal-card p-6 sm:p-8 bg-white border border-[#CBDED7]">
-                <h3 className="text-xl font-bold text-[#04342C] mb-6 flex items-center gap-2 pb-3 border-b border-[#CBDED7]">
-                  <Edit3 className="w-5 h-5 text-[#0F6E56]" />
+              <div className="deal-card p-6 sm:p-8 bg-white border border-[#E2E1F2]">
+                <h3 className="text-xl font-bold text-[#241C4F] mb-6 flex items-center gap-2 pb-3 border-b border-[#E2E1F2]">
+                  <Edit3 className="w-5 h-5 text-[#4F46E5]" />
                   <span>Update Profile Information</span>
                 </h3>
 
                 <form onSubmit={handleSave} className="space-y-5">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#04342C] mb-1.5">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[#241C4F] mb-1.5">
                       Name
                     </label>
                     <input
@@ -217,12 +217,12 @@ export default function CreatorDashboard() {
                       required
                       value={editForm.name}
                       onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#CBDED7] rounded-lg text-sm text-[#2C2C2A] focus:outline-none focus:border-[#0F6E56]"
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#E2E1F2] rounded-lg text-sm text-[#151231] focus:outline-none focus:border-[#4F46E5]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#04342C] mb-1.5">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[#241C4F] mb-1.5">
                       Channel / Profile Link
                     </label>
                     <input
@@ -230,13 +230,13 @@ export default function CreatorDashboard() {
                       required
                       value={editForm.channel_url}
                       onChange={(e) => setEditForm({ ...editForm, channel_url: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#CBDED7] rounded-lg text-sm text-[#2C2C2A] focus:outline-none focus:border-[#0F6E56]"
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#E2E1F2] rounded-lg text-sm text-[#151231] focus:outline-none focus:border-[#4F46E5]"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-[#04342C] mb-1.5">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#241C4F] mb-1.5">
                         Followers / Audience Count
                       </label>
                       <input
@@ -245,18 +245,18 @@ export default function CreatorDashboard() {
                         min="0"
                         value={editForm.subscriber_count}
                         onChange={(e) => setEditForm({ ...editForm, subscriber_count: e.target.value })}
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#CBDED7] rounded-lg text-sm text-[#2C2C2A] focus:outline-none focus:border-[#0F6E56]"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E1F2] rounded-lg text-sm text-[#151231] focus:outline-none focus:border-[#4F46E5]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-[#04342C] mb-1.5">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#241C4F] mb-1.5">
                         Niche / Category
                       </label>
                       <select
                         value={editForm.niche}
                         onChange={(e) => setEditForm({ ...editForm, niche: e.target.value })}
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#CBDED7] rounded-lg text-sm text-[#2C2C2A] focus:outline-none focus:border-[#0F6E56]"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E1F2] rounded-lg text-sm text-[#151231] focus:outline-none focus:border-[#4F46E5]"
                       >
                         {NICHES.map((n) => (
                           <option key={n} value={n}>
@@ -268,14 +268,14 @@ export default function CreatorDashboard() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#04342C] mb-1.5">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[#241C4F] mb-1.5">
                       Bio / Content Summary
                     </label>
                     <textarea
                       rows={4}
                       value={editForm.bio}
                       onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#CBDED7] rounded-lg text-sm text-[#2C2C2A] focus:outline-none focus:border-[#0F6E56] resize-none"
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#E2E1F2] rounded-lg text-sm text-[#151231] focus:outline-none focus:border-[#4F46E5] resize-none"
                     />
                   </div>
 
@@ -283,7 +283,7 @@ export default function CreatorDashboard() {
                     <button
                       type="submit"
                       disabled={saveLoading}
-                      className="px-6 py-2.5 bg-[#0F6E56] hover:bg-[#1D9E75] text-white font-bold text-sm rounded-lg transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50"
+                      className="px-6 py-2.5 bg-[#4F46E5] hover:bg-[#8B5CF6] text-white font-bold text-sm rounded-lg transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50"
                     >
                       <Save className="w-4 h-4" />
                       <span>{saveLoading ? 'Saving...' : 'Save Profile Changes'}</span>
@@ -291,7 +291,7 @@ export default function CreatorDashboard() {
                     <button
                       type="button"
                       onClick={() => setIsEditing(false)}
-                      className="px-4 py-2.5 border border-[#CBDED7] text-[#5A6561] hover:text-[#04342C] font-medium text-sm rounded-lg"
+                      className="px-4 py-2.5 border border-[#E2E1F2] text-[#5B5B72] hover:text-[#241C4F] font-medium text-sm rounded-lg"
                     >
                       Cancel
                     </button>
@@ -300,45 +300,45 @@ export default function CreatorDashboard() {
               </div>
             ) : (
               /* View Profile Card */
-              <div className="deal-card p-6 sm:p-8 bg-white border border-[#CBDED7] space-y-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-[#CBDED7]">
+              <div className="deal-card p-6 sm:p-8 bg-white border border-[#E2E1F2] space-y-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-[#E2E1F2]">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-[#E1F5EE] border border-[#1D9E75] flex items-center justify-center text-[#0F6E56] font-bold text-xl">
-                      <Sparkles className="w-6 h-6 text-[#0F6E56]" />
+                    <div className="w-12 h-12 rounded-lg bg-[#F1F0FA] border border-[#8B5CF6] flex items-center justify-center text-[#4F46E5] font-bold text-xl">
+                      <Sparkles className="w-6 h-6 text-[#4F46E5]" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-[#04342C]">{creator?.name}</h2>
-                      <p className="text-xs text-[#5A6561] flex items-center gap-1">
-                        <Mail className="w-3.5 h-3.5 text-[#0F6E56]" />
+                      <h2 className="text-2xl font-bold text-[#241C4F]">{creator?.name}</h2>
+                      <p className="text-xs text-[#5B5B72] flex items-center gap-1">
+                        <Mail className="w-3.5 h-3.5 text-[#4F46E5]" />
                         <span>{creator?.email}</span>
                       </p>
                     </div>
                   </div>
-                  <span className="px-3 py-1 bg-[#E1F5EE] border border-[#1D9E75] text-[#0F6E56] font-semibold text-xs rounded-full">
+                  <span className="px-3 py-1 bg-[#F1F0FA] border border-[#8B5CF6] text-[#4F46E5] font-semibold text-xs rounded-full">
                     {creator?.niche}
                   </span>
                 </div>
 
                 {/* Details grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="p-4 rounded-lg bg-[#E1F5EE]/40 border border-[#CBDED7]">
-                    <span className="text-xs font-semibold text-[#5A6561] uppercase tracking-wider block mb-1">
+                  <div className="p-4 rounded-lg bg-[#F1F0FA]/40 border border-[#E2E1F2]">
+                    <span className="text-xs font-semibold text-[#5B5B72] uppercase tracking-wider block mb-1">
                       Followers / Audience
                     </span>
-                    <span className="text-2xl font-extrabold text-[#04342C]">
+                    <span className="text-2xl font-extrabold text-[#241C4F]">
                       {Number(creator?.subscriber_count).toLocaleString()}
                     </span>
                   </div>
 
-                  <div className="p-4 rounded-lg bg-[#E1F5EE]/40 border border-[#CBDED7]">
-                    <span className="text-xs font-semibold text-[#5A6561] uppercase tracking-wider block mb-1">
+                  <div className="p-4 rounded-lg bg-[#F1F0FA]/40 border border-[#E2E1F2]">
+                    <span className="text-xs font-semibold text-[#5B5B72] uppercase tracking-wider block mb-1">
                       Channel / Profile Link
                     </span>
                     <a
                       href={creator?.channel_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm font-semibold text-[#0F6E56] hover:text-[#1D9E75] underline flex items-center gap-1 truncate"
+                      className="text-sm font-semibold text-[#4F46E5] hover:text-[#8B5CF6] underline flex items-center gap-1 truncate"
                     >
                       <span className="truncate">{creator?.channel_url}</span>
                       <ExternalLink className="w-3.5 h-3.5 shrink-0" />
@@ -347,23 +347,23 @@ export default function CreatorDashboard() {
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#04342C] mb-2 flex items-center gap-1.5">
-                    <FileText className="w-4 h-4 text-[#0F6E56]" />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#241C4F] mb-2 flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-[#4F46E5]" />
                     <span>Bio / Content Summary</span>
                   </h4>
-                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-sm text-[#2C2C2A] leading-relaxed">
+                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-sm text-[#151231] leading-relaxed">
                     {creator?.bio ? creator.bio : <span className="text-gray-400 italic">No bio provided yet. Click &quot;Edit Profile&quot; to add details for brands.</span>}
                   </div>
                 </div>
 
-                <div className="pt-2 text-xs text-[#5A6561] flex items-center justify-between border-t border-[#CBDED7]">
+                <div className="pt-2 text-xs text-[#5B5B72] flex items-center justify-between border-t border-[#E2E1F2]">
                   <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-[#0F6E56]" />
+                    <Calendar className="w-3.5 h-3.5 text-[#4F46E5]" />
                     <span>Member since {new Date(creator?.created_at).toLocaleDateString()}</span>
                   </span>
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="text-[#0F6E56] font-semibold hover:underline flex items-center gap-1"
+                    className="text-[#4F46E5] font-semibold hover:underline flex items-center gap-1"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                     <span>Edit profile details</span>
@@ -375,21 +375,21 @@ export default function CreatorDashboard() {
 
           {/* Right Status Sidebar */}
           <div className="lg:col-span-4 space-y-6">
-            <div className="deal-card p-6 bg-[#042C53] text-white border border-[#0F6E56] space-y-4">
+            <div className="deal-card p-6 bg-[#1B1540] text-white border border-[#4F46E5] space-y-4">
               <h3 className="font-bold text-lg text-white flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-[#1D9E75]" />
+                <UserCheck className="w-5 h-5 text-[#8B5CF6]" />
                 <span>Account Status</span>
               </h3>
 
               <div className="space-y-3 text-xs">
-                <div className="p-3 rounded-lg bg-[#04342C] border border-[#0F6E56]">
-                  <span className="text-emerald-300 font-bold block mb-1">Status: Active in Network</span>
-                  <p className="text-emerald-100/80">Your profile is visible in Rex&apos;s internal creator match list for upcoming brand campaigns.</p>
+                <div className="p-3 rounded-lg bg-[#241C4F] border border-[#4F46E5]">
+                  <span className="text-violet-300 font-bold block mb-1">Status: Active in Network</span>
+                  <p className="text-violet-100/80">Your profile is visible in Rex&apos;s internal creator match list for upcoming brand campaigns.</p>
                 </div>
 
-                <div className="p-3 rounded-lg bg-[#04342C] border border-[#0F6E56]">
-                  <span className="text-emerald-300 font-bold block mb-1">Next Match Step</span>
-                  <p className="text-emerald-100/80">When a brand requests creators in your niche ({creator?.niche}), Rex will contact you directly via <strong className="text-white">{creator?.email}</strong>.</p>
+                <div className="p-3 rounded-lg bg-[#241C4F] border border-[#4F46E5]">
+                  <span className="text-violet-300 font-bold block mb-1">Next Match Step</span>
+                  <p className="text-violet-100/80">When a brand requests creators in your niche ({creator?.niche}), Rex will contact you directly via <strong className="text-white">{creator?.email}</strong>.</p>
                 </div>
               </div>
             </div>

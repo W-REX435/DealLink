@@ -1,67 +1,67 @@
 @import 'tailwindcss';
 
 /* ------------------------------------------------------------------ */
-/*  DealLink Design System — light-first, green identity, dark mode    */
+/*  DealLink Design System — Midnight Violet, light-first + dark mode  */
 /* ------------------------------------------------------------------ */
 
 :root {
-  /* Core greens */
-  --primary: #04342c;            /* deep pine  — headings, dark sections */
-  --primary-2: #0f6e56;          /* mid green  — primary buttons */
-  --accent: #1d9e75;             /* emerald    — highlights, glows, pings */
-  --accent-soft: #4ccb9c;        /* bright emerald — dark-mode accent, gradients */
+  /* Core violets */
+  --primary: #241c4f;            /* deep indigo — dark sections */
+  --primary-2: #4f46e5;          /* indigo     — primary buttons */
+  --accent: #8b5cf6;             /* violet     — highlights, glows, pings */
+  --accent-soft: #a78bfa;        /* soft violet — dark-mode accent, gradients */
 
   /* Neutrals (light) */
-  --background: #fafdfb;         /* near-white w/ green tint — page bg */
-  --foreground: #071f18;         /* ink — headings */
+  --background: #fafafd;         /* near-white w/ violet tint — page bg */
+  --foreground: #151231;         /* ink — headings */
   --surface: #ffffff;            /* cards */
-  --mint: #e7f5ee;               /* soft mint — alternating sections */
-  --mint-2: #f0f9f4;             /* lighter mint — chip surfaces */
-  --muted: #5b6b64;              /* body text */
-  --muted-2: #8a9a92;            /* tertiary text */
-  --border: rgba(6, 35, 28, 0.1);   /* hairline border */
-  --border-strong: rgba(6, 35, 28, 0.16);
-  --glow: rgba(29, 158, 117, 0.1);  /* green ambient glow */
+  --soft: #f1f0fa;               /* soft lavender — alternating sections */
+  --soft-2: #f6f5fc;             /* lighter lavender — chip surfaces */
+  --muted: #5b5b72;              /* body text */
+  --muted-2: #8c8ca3;            /* tertiary text */
+  --border: rgba(21, 18, 49, 0.1);   /* hairline border */
+  --border-strong: rgba(21, 18, 49, 0.16);
+  --glow: rgba(139, 92, 246, 0.12);  /* violet ambient glow */
 
   /* Semantic */
-  --success: #1d9e75;
+  --success: #22c55e;
   --danger: #dc2626;
   --warning: #d97706;
 
   /* Niche accents (8-category system) */
   --c-tech: #06b6d4;
-  --c-gaming: #8b5cf6;
-  --c-finance: #10b981;
-  --c-productivity: #f59e0b;
-  --c-lifestyle: #f97316;
-  --c-fitness: #84cc16;
+  --c-gaming: #d946ef;
+  --c-finance: #f59e0b;
+  --c-productivity: #f97316;
+  --c-lifestyle: #0ea5e9;
+  --c-fitness: #ef4444;
   --c-beauty: #ec4899;
-  --c-education: #3b82f6;
+  --c-education: #6366f1;
 }
 
 .dark {
-  --background: #05120d;
-  --foreground: #eef6f1;
-  --surface: #0b1d16;
-  --mint: #0a1b15;
-  --mint-2: #0e241c;
-  --muted: #9db0a7;
-  --muted-2: #6f837a;
-  --primary: #0f6e56;
-  --primary-2: #1d9e75;
-  --accent: #3ddca6;
-  --accent-soft: #6ee7bd;
-  --border: rgba(238, 246, 241, 0.1);
-  --border-strong: rgba(238, 246, 241, 0.18);
-  --glow: rgba(61, 220, 166, 0.12);
+  --background: #0b0916;
+  --foreground: #efedf8;
+  --surface: #141127;
+  --soft: #100d20;
+  --soft-2: #171331;
+  --muted: #a5a1bc;
+  --muted-2: #716c8f;
+  --primary: #4c43d8;
+  --primary-2: #5b52e8;
+  --accent: #a78bfa;
+  --accent-soft: #c4b5fd;
+  --border: rgba(239, 237, 248, 0.1);
+  --border-strong: rgba(239, 237, 248, 0.18);
+  --glow: rgba(167, 139, 250, 0.14);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
-  --color-mint: var(--mint);
-  --color-mint-2: var(--mint-2);
+  --color-soft: var(--soft);
+  --color-soft-2: var(--soft-2);
   --color-muted: var(--muted);
   --color-muted-2: var(--muted-2);
   --color-primary: var(--primary);
@@ -86,10 +86,10 @@
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  --shadow-soft: 0 1px 3px rgba(6, 35, 28, 0.05);
-  --shadow-mid: 0 4px 20px rgba(6, 35, 28, 0.07);
-  --shadow-high: 0 12px 40px rgba(6, 35, 28, 0.12);
-  --shadow-lift: 0 20px 60px rgba(6, 35, 28, 0.16);
+  --shadow-soft: 0 1px 3px rgba(21, 18, 49, 0.05);
+  --shadow-mid: 0 4px 20px rgba(21, 18, 49, 0.08);
+  --shadow-high: 0 12px 40px rgba(21, 18, 49, 0.14);
+  --shadow-lift: 0 20px 60px rgba(21, 18, 49, 0.18);
 
   --animate-marquee: marquee 32s linear infinite;
   --animate-marquee-reverse: marquee-reverse 36s linear infinite;
@@ -156,7 +156,7 @@
 @layer components {
   /* Section eyebrow badge */
   .dl-badge {
-    @apply inline-flex items-center gap-2 rounded-full border border-border bg-mint-2 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-muted;
+    @apply inline-flex items-center gap-2 rounded-full border border-border bg-soft-2 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-muted;
   }
 
   /* Primary button */
@@ -166,7 +166,7 @@
 
   /* Secondary / ghost button */
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-transparent px-6 py-3 text-sm font-semibold text-foreground transition-all duration-200 hover:border-border-strong hover:bg-mint;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-transparent px-6 py-3 text-sm font-semibold text-foreground transition-all duration-200 hover:border-border-strong hover:bg-soft;
   }
 
   /* Card */
@@ -181,7 +181,7 @@
 
   /* Input */
   .dl-input {
-    @apply w-full rounded-xl border border-border bg-mint-2 px-4 py-3 text-sm font-medium text-foreground placeholder:text-muted-2 transition-all duration-200 focus:border-accent/50 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/20;
+    @apply w-full rounded-xl border border-border bg-soft-2 px-4 py-3 text-sm font-medium text-foreground placeholder:text-muted-2 transition-all duration-200 focus:border-accent/50 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/20;
   }
 
   /* Legacy support until all pages are migrated */
@@ -204,7 +204,7 @@
   -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%);
 }
 
-/* Green gradient text */
+/* Violet gradient text */
 .text-gradient-accent {
   background: linear-gradient(120deg, var(--accent) 0%, var(--accent-soft) 50%, var(--accent) 100%);
   -webkit-background-clip: text;

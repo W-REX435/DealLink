@@ -57,7 +57,7 @@ export default function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-lg px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:bg-mint hover:text-foreground"
+              className="rounded-lg px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:bg-soft hover:text-foreground"
             >
               {link.label}
             </Link>
@@ -97,7 +97,7 @@ export default function Navbar() {
           <ThemeToggle />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-mint-2 text-foreground"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-soft-2 text-foreground"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -125,7 +125,7 @@ export default function Navbar() {
                   <Link
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block rounded-xl px-4 py-3 text-sm font-medium text-muted transition-colors hover:bg-mint hover:text-foreground"
+                    className="block rounded-xl px-4 py-3 text-sm font-medium text-muted transition-colors hover:bg-soft hover:text-foreground"
                   >
                     {link.label}
                   </Link>

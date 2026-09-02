@@ -74,7 +74,7 @@ export default function Faq() {
                       animate={{ rotate: isOpen ? 45 : 0 }}
                       transition={{ duration: 0.25, ease: EASE }}
                       className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${
-                        isOpen ? 'bg-accent text-white' : 'bg-mint-2 text-muted'
+                        isOpen ? 'bg-accent text-white' : 'bg-soft-2 text-muted'
                       }`}
                     >
                       <Plus className="h-4 w-4" />

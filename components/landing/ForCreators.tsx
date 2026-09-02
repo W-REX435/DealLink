@@ -40,7 +40,7 @@ export default function ForCreators() {
   const reduce = useReducedMotion();
 
   return (
-    <section id="creators" className="border-y border-border bg-mint py-20 md:py-28">
+    <section id="creators" className="border-y border-border bg-soft py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="grid items-center gap-14 lg:grid-cols-2 lg:gap-16">
           {/* Copy */}
@@ -160,7 +160,7 @@ export default function ForCreators() {
                       whileInView={reduce ? undefined : { opacity: 1, x: 0 }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, ease: EASE, delay: 0.4 + i * 0.15 }}
-                      className="flex items-center justify-between rounded-xl border border-border bg-mint-2 px-4 py-3"
+                      className="flex items-center justify-between rounded-xl border border-border bg-soft-2 px-4 py-3"
                     >
                       <div className="flex items-center gap-3">
                         <span className={`h-2 w-2 rounded-full ${deal.color}`} />
@@ -181,7 +181,7 @@ export default function ForCreators() {
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center gap-2 border-t border-border bg-mint px-5 py-3.5">
+                <div className="flex items-center gap-2 border-t border-border bg-soft px-5 py-3.5">
                   <Mail className="h-3.5 w-3.5 text-accent" />
                   <p className="text-xs text-muted">
                     New brand match: <strong className="text-foreground">1 new inquiry</strong> in
