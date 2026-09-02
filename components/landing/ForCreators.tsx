@@ -1,7 +1,15 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { motion, useReducedMotion } from 'framer-motion';
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useInView,
+  useReducedMotion,
+  animate,
+} from 'framer-motion';
 import {
   CheckCircle,
   ArrowRight,
@@ -31,16 +39,89 @@ const PERKS = [
 ];
 
 const METRICS = [
-  { label: 'Subscribers', value: '142K' },
-  { label: 'Deals closed', value: '17' },
-  { label: 'Avg. CPM', value: '$28' },
+  { label: 'Subscribers', value: 142, suffix: 'K' },
+  { label: 'Deals closed', value: 17, suffix: '' },
+  { label: 'Avg. deal', value: 2.4, prefix: '$', suffix: 'K' },
 ];
 
-export default function ForCreators() {
+const DEALS = [
+  { brand: 'Northwind SaaS', niche: 'Tech & SaaS', value: '$2,400', color: 'bg-c-tech', text: 'text-c-tech' },
+  { brand: 'Pulse Fitness', niche: 'Fitness & Health', value: '$1,800', color: 'bg-c-fitness', text: 'text-c-fitness' },
+  { brand: 'Ledgerly', niche: 'Finance & Investing', value: '$3,100', color: 'bg-c-finance', text: 'text-c-finance' },
+];
+
+function Metric({
+  label,
+  value,
+  prefix = '',
+  suffix = '',
+  delay,
+}: {
+  label: string;
+  value: number;
+  prefix?: string;
+  suffix?: string;
+  delay: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-60px' });
   const reduce = useReducedMotion();
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    if (reduce) {
+      setDisplay(value);
+      return;
+    }
+    const controls = animate(0, value, {
+      duration: 1.4,
+      ease: [0.16, 1, 0.3, 1],
+      delay,
+      onUpdate: (v) => setDisplay(Number(v.toFixed(1))),
+    });
+    return () => controls.stop();
+  }, [inView, value, delay, reduce]);
 
   return (
-    <section id="creators" className="border-y border-border bg-soft/80 py-20 md:py-28">
+    <motion.div
+      ref={ref}
+      initial={reduce ? undefined : { opacity: 0, y: 14 }}
+      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, ease: EASE, delay }}
+      className="p-4 text-center"
+    >
+      <p className="text-lg font-bold tracking-tight text-foreground">
+        {prefix}
+        {display.toLocaleString()}
+        {suffix}
+      </p>
+      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-2">
+        {label}
+      </p>
+    </motion.div>
+  );
+}
+
+export default function ForCreators() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const reduce = useReducedMotion();
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  });
+  const rotateX = useTransform(scrollYProgress, [0, 0.5, 1], [16, 0, -10]);
+  const rotateY = useTransform(scrollYProgress, [0, 0.5, 1], [10, 0, -6]);
+  const cardY = useTransform(scrollYProgress, [0, 1], [60, -60]);
+
+  return (
+    <section
+      id="creators"
+      ref={sectionRef}
+      className="border-y border-border bg-soft/80 py-20 md:py-28"
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="grid items-center gap-14 lg:grid-cols-2 lg:gap-16">
           {/* Copy */}
@@ -48,7 +129,7 @@ export default function ForCreators() {
             <Reveal>
               <span className="inline-flex items-center gap-2 rounded-full border border-accent/25 bg-accent/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-accent">
                 <Layers className="h-4 w-4" />
-                Built for creators on any platform
+                Side one — the creators
               </span>
               <h2 className="mt-5 text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl">
                 Turn your audience into{' '}
@@ -56,8 +137,7 @@ export default function ForCreators() {
               </h2>
               <p className="mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
                 Stop wasting time emailing unresponsive marketing managers.
-                DealLink brings pre-qualified sponsors directly to you, with
-                deals tailored to your exact audience and content niche.
+                DealLink brings pre-qualified sponsors directly to you.
               </p>
             </Reveal>
 
@@ -91,9 +171,15 @@ export default function ForCreators() {
             </Reveal>
           </div>
 
-          {/* Visual: creator profile card */}
-          <Reveal delay={0.15} y={36}>
-            <div className="relative mx-auto max-w-md">
+          {/* Visual: scroll-tilting creator profile card */}
+          <div className="relative mx-auto max-w-md" style={{ perspective: 1200 }}>
+            <motion.div
+              style={
+                reduce
+                  ? undefined
+                  : { rotateX, rotateY, y: cardY, transformStyle: 'preserve-3d' }
+              }
+            >
               <div className="pointer-events-none absolute -inset-8 rounded-[2rem] bg-accent/10 blur-3xl" />
               <div className="dl-card relative overflow-hidden shadow-high">
                 {/* Header */}
@@ -126,21 +212,7 @@ export default function ForCreators() {
                 {/* Metrics */}
                 <div className="grid grid-cols-3 divide-x divide-border border-b border-border">
                   {METRICS.map((metric, i) => (
-                    <motion.div
-                      key={metric.label}
-                      initial={reduce ? undefined : { opacity: 0, y: 12 }}
-                      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5, ease: EASE, delay: 0.2 + i * 0.12 }}
-                      className="p-4 text-center"
-                    >
-                      <p className="text-lg font-bold tracking-tight text-foreground">
-                        {metric.value}
-                      </p>
-                      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-2">
-                        {metric.label}
-                      </p>
-                    </motion.div>
+                    <Metric key={metric.label} {...metric} delay={i * 0.12} />
                   ))}
                 </div>
 
@@ -149,17 +221,13 @@ export default function ForCreators() {
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-2">
                     Recent matches
                   </p>
-                  {[
-                    { brand: 'Northwind SaaS', niche: 'Tech & SaaS', value: '$2,400', color: 'bg-c-tech', text: 'text-c-tech' },
-                    { brand: 'Pulse Fitness', niche: 'Fitness & Health', value: '$1,800', color: 'bg-c-fitness', text: 'text-c-fitness' },
-                    { brand: 'Ledgerly', niche: 'Finance & Investing', value: '$3,100', color: 'bg-c-finance', text: 'text-c-finance' },
-                  ].map((deal, i) => (
+                  {DEALS.map((deal, i) => (
                     <motion.div
                       key={deal.brand}
                       initial={reduce ? undefined : { opacity: 0, x: -16 }}
                       whileInView={reduce ? undefined : { opacity: 1, x: 0 }}
                       viewport={{ once: true }}
-                      transition={{ duration: 0.5, ease: EASE, delay: 0.4 + i * 0.15 }}
+                      transition={{ duration: 0.5, ease: EASE, delay: 0.3 + i * 0.15 }}
                       className="flex items-center justify-between rounded-xl border border-border bg-soft-2 px-4 py-3"
                     >
                       <div className="flex items-center gap-3">
@@ -184,13 +252,14 @@ export default function ForCreators() {
                 <div className="flex items-center gap-2 border-t border-border bg-soft px-5 py-3.5">
                   <Mail className="h-3.5 w-3.5 text-accent" />
                   <p className="text-xs text-muted">
-                    New brand match: <strong className="text-foreground">1 new inquiry</strong> in
+                    New brand match:{' '}
+                    <strong className="text-foreground">1 new inquiry</strong> in
                     Tech & SaaS
                   </p>
                 </div>
               </div>
-            </div>
-          </Reveal>
+            </motion.div>
+          </div>
         </div>
       </div>
     </section>

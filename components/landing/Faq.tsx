@@ -1,7 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useRef, useState } from 'react';
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useSpring,
+  useReducedMotion,
+} from 'framer-motion';
 import { Plus } from 'lucide-react';
 import Reveal from '@/components/ui/Reveal';
 import { EASE } from '@/lib/motion';
@@ -38,66 +44,97 @@ const FAQS = [
 ];
 
 export default function Faq() {
+  const listRef = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
   const [open, setOpen] = useState<number | null>(0);
+
+  const { scrollYProgress } = useScroll({
+    target: listRef,
+    offset: ['start 80%', 'end 60%'],
+  });
+  const lineScale = useSpring(scrollYProgress, { stiffness: 80, damping: 24 });
 
   return (
     <section id="faq" className="bg-background/75 py-20 md:py-28">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
         <Reveal className="mb-12 text-center">
-          <span className="dl-badge">FAQ</span>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl">
-            Questions,{' '}
-            <span className="text-gradient-accent">answered</span>
+          <span className="dl-badge">Still wondering?</span>
+          <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+            Questions, <span className="text-gradient-accent">answered</span>
           </h2>
         </Reveal>
 
-        <div className="space-y-3">
-          {FAQS.map((faq, i) => {
-            const isOpen = open === i;
-            return (
-              <Reveal key={faq.q} delay={i * 0.05} y={16}>
-                <div
-                  className={`overflow-hidden rounded-2xl border transition-colors duration-300 ${
-                    isOpen
-                      ? 'border-accent/30 bg-surface shadow-mid'
-                      : 'border-border bg-surface/60 hover:border-border-strong'
-                  }`}
+        <div ref={listRef} className="relative">
+          {/* Scroll-drawn timeline */}
+          <div className="absolute -left-4 top-2 bottom-2 w-px bg-border sm:-left-7">
+            <motion.div
+              style={reduce ? undefined : { scaleY: lineScale }}
+              className="h-full w-full origin-top bg-gradient-to-b from-accent via-accent/70 to-accent/20"
+            />
+          </div>
+
+          <div className="space-y-3">
+            {FAQS.map((faq, i) => {
+              const isOpen = open === i;
+              return (
+                <motion.div
+                  key={faq.q}
+                  initial={reduce ? undefined : { opacity: 0, y: 40, rotateX: -12 }}
+                  whileInView={reduce ? undefined : { opacity: 1, y: 0, rotateX: 0 }}
+                  viewport={{ once: true, margin: '-60px' }}
+                  transition={{ duration: 0.6, ease: EASE, delay: i * 0.05 }}
+                  style={{ perspective: 800 }}
+                  className="relative pl-8 sm:pl-14"
                 >
-                  <button
-                    onClick={() => setOpen(isOpen ? null : i)}
-                    className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+                  {/* Node dot */}
+                  <span
+                    className={`absolute left-[-7px] top-6 h-3 w-3 rounded-full border-2 border-background transition-colors sm:left-[-19px] ${
+                      isOpen ? 'bg-accent shadow-[0_0_10px_var(--accent)]' : 'bg-muted-2'
+                    }`}
+                  />
+                  <div
+                    className={`overflow-hidden rounded-2xl border transition-colors duration-300 ${
+                      isOpen
+                        ? 'border-accent/30 bg-surface shadow-mid'
+                        : 'border-border bg-surface/60 hover:border-border-strong'
+                    }`}
                   >
-                    <span className="text-base font-semibold tracking-tight text-foreground">
-                      {faq.q}
-                    </span>
-                    <motion.span
-                      animate={{ rotate: isOpen ? 45 : 0 }}
-                      transition={{ duration: 0.25, ease: EASE }}
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${
-                        isOpen ? 'bg-accent text-white' : 'bg-soft-2 text-muted'
-                      }`}
+                    <button
+                      onClick={() => setOpen(isOpen ? null : i)}
+                      className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
                     >
-                      <Plus className="h-4 w-4" />
-                    </motion.span>
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.35, ease: EASE }}
+                      <span className="text-base font-semibold tracking-tight text-foreground">
+                        {faq.q}
+                      </span>
+                      <motion.span
+                        animate={{ rotate: isOpen ? 45 : 0 }}
+                        transition={{ duration: 0.25, ease: EASE }}
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${
+                          isOpen ? 'bg-accent text-white' : 'bg-soft-2 text-muted'
+                        }`}
                       >
-                        <p className="px-6 pb-6 text-sm leading-relaxed text-muted">
-                          {faq.a}
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </Reveal>
-            );
-          })}
+                        <Plus className="h-4 w-4" />
+                      </motion.span>
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.35, ease: EASE }}
+                        >
+                          <p className="px-6 pb-6 text-sm leading-relaxed text-muted">
+                            {faq.a}
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>

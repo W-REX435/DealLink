@@ -1,35 +1,55 @@
 'use client';
 
+import { useRef } from 'react';
 import Link from 'next/link';
-import { motion, useReducedMotion } from 'framer-motion';
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+  useReducedMotion,
+} from 'framer-motion';
 import { ArrowRight, Sparkles } from 'lucide-react';
-import Reveal from '@/components/ui/Reveal';
 
 export default function CTABanner() {
+  const runwayRef = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
 
+  const { scrollYProgress } = useScroll({
+    target: runwayRef,
+    offset: ['start end', 'end end'],
+  });
+  const p = useSpring(scrollYProgress, { stiffness: 90, damping: 24, mass: 0.4 });
+
+  const scale = useTransform(p, [0, 0.5], [0.86, 1]);
+  const glow = useTransform(p, [0, 0.5, 1], [0, 1, 1.4]);
+  const glowOpacity = useTransform(p, [0, 0.6], [0, 1]);
+  const contentY = useTransform(p, [0, 0.6], [40, 0]);
+  const contentO = useTransform(p, [0.05, 0.4], [0, 1]);
+
   return (
-    <section className="bg-background/75 py-20 md:py-28">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        <Reveal>
-          <div className="relative overflow-hidden rounded-3xl border border-accent/20 bg-gradient-to-br from-primary via-primary to-primary-2 px-6 py-16 text-center shadow-high sm:px-12 md:py-20">
+    <section ref={runwayRef} className="relative h-[150vh] bg-background/75">
+      <div className="sticky top-0 flex h-screen items-center justify-center overflow-hidden px-4 sm:px-6">
+        <motion.div
+          style={reduce ? undefined : { scale, y: contentY, opacity: contentO }}
+          className="relative w-full max-w-5xl"
+        >
+          <motion.div
+            style={reduce ? undefined : { opacity: glowOpacity, scale: glow }}
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[760px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/15 blur-[130px]"
+          />
+
+          <div className="relative overflow-hidden rounded-3xl border border-accent/25 bg-gradient-to-br from-primary via-primary to-primary-2 px-6 py-16 text-center shadow-high sm:px-12 md:py-24">
             <div className="bg-dot-grid bg-dot-grid-fade absolute inset-0 opacity-40" />
-            <div className="pointer-events-none absolute -top-24 left-1/2 h-[300px] w-[500px] -translate-x-1/2 rounded-full bg-accent/20 blur-[100px]" />
 
             <div className="relative z-10">
-              <motion.span
-                initial={reduce ? undefined : { opacity: 0, y: 14 }}
-                whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-accent-soft"
-              >
+              <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-accent-soft">
                 <Sparkles className="h-3.5 w-3.5" />
                 Free to join
-              </motion.span>
+              </span>
 
-              <h2 className="mx-auto mt-6 max-w-2xl text-balance text-3xl font-semibold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
-                Your next sponsorship deal is one{' '}
+              <h2 className="mx-auto mt-6 max-w-2xl text-balance text-3xl font-semibold leading-tight tracking-tight text-white sm:text-4xl md:text-6xl">
+                Your next deal is one{' '}
                 <span className="text-gradient-accent">profile</span> away
               </h2>
               <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">
@@ -58,7 +78,7 @@ export default function CTABanner() {
               </div>
             </div>
           </div>
-        </Reveal>
+        </motion.div>
       </div>
     </section>
   );
