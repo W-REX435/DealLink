@@ -11,6 +11,8 @@ import {
 } from 'framer-motion';
 import { ArrowRight, ChevronDown, Sparkles } from 'lucide-react';
 import { blurReveal, EASE } from '@/lib/motion';
+import Aurora from '@/components/ui/Aurora';
+import Magnetic from '@/components/ui/Magnetic';
 
 function CountUp({ to }: { to: number }) {
   const [value, setValue] = useState(0);
@@ -57,6 +59,7 @@ export default function Hero() {
       ref={ref}
       className="relative flex min-h-[calc(100vh-72px)] items-center justify-center overflow-hidden px-4 py-20 sm:px-6"
     >
+      <Aurora />
       <div className="pointer-events-none absolute -top-32 left-1/2 h-[440px] w-[720px] -translate-x-1/2 rounded-full bg-accent/10 blur-[130px]" />
 
       <motion.div
@@ -112,7 +115,7 @@ export default function Hero() {
           animate="visible"
           className="mt-10 flex flex-col items-center justify-center gap-3.5 sm:flex-row"
         >
-          <motion.div whileHover={reduce ? undefined : { scale: 1.03 }} whileTap={reduce ? undefined : { scale: 0.97 }}>
+          <Magnetic strength={0.2}>
             <Link
               href="/creator/signup"
               className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-2 px-8 py-4 text-base font-semibold text-white shadow-mid transition-all hover:bg-primary hover:shadow-high sm:w-auto"
@@ -120,15 +123,15 @@ export default function Hero() {
               Join free — it takes 2 minutes
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
-          </motion.div>
-          <motion.div whileHover={reduce ? undefined : { scale: 1.03 }} whileTap={reduce ? undefined : { scale: 0.97 }}>
+          </Magnetic>
+          <Magnetic strength={0.2}>
             <a
               href="#businesses"
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface/60 px-8 py-4 text-base font-semibold text-foreground backdrop-blur-sm transition-all hover:border-border-strong hover:bg-surface sm:w-auto"
             >
               I&apos;m a brand
             </a>
-          </motion.div>
+          </Magnetic>
         </motion.div>
       </motion.div>
 

@@ -1,7 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from 'framer-motion';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
 import Logo from '@/components/Logo';
 import ThemeToggle from '@/components/ui/ThemeToggle';
@@ -33,21 +38,39 @@ export default function AuthLayout({
 }: AuthLayoutProps) {
   const background = bg ? BACKGROUNDS[bg] : null;
 
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const bgX = useSpring(useTransform(mx, [-0.5, 0.5], [-14, 14]), {
+    stiffness: 50,
+    damping: 20,
+  });
+  const bgY = useSpring(useTransform(my, [-0.5, 0.5], [-10, 10]), {
+    stiffness: 50,
+    damping: 20,
+  });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    mx.set(e.clientX / window.innerWidth - 0.5);
+    my.set(e.clientY / window.innerHeight - 0.5);
+  };
+
   return (
-    <div className="relative flex min-h-screen flex-col">
+    <div className="relative flex min-h-screen flex-col" onMouseMove={handleMouseMove}>
       {/* Cinematic background with readability overlay */}
       {background && (
-        <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
-          <img
-            src={background.light}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover dark:hidden"
-          />
-          <img
-            src={background.dark}
-            alt=""
-            className="absolute inset-0 hidden h-full w-full object-cover dark:block"
-          />
+        <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+          <motion.div style={{ x: bgX, y: bgY }} className="absolute -inset-6">
+            <img
+              src={background.light}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover dark:hidden"
+            />
+            <img
+              src={background.dark}
+              alt=""
+              className="absolute inset-0 hidden h-full w-full object-cover dark:block"
+            />
+          </motion.div>
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/25 to-background/85" />
           <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background" />
         </div>

@@ -10,6 +10,7 @@ import {
   useReducedMotion,
 } from 'framer-motion';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import Magnetic from '@/components/ui/Magnetic';
 
 export default function CTABanner() {
   const runwayRef = useRef<HTMLElement>(null);
@@ -58,7 +59,7 @@ export default function CTABanner() {
               </p>
 
               <div className="mt-9 flex flex-col items-center justify-center gap-3.5 sm:flex-row">
-                <motion.div whileHover={reduce ? undefined : { scale: 1.03 }} whileTap={reduce ? undefined : { scale: 0.97 }}>
+                <Magnetic strength={0.25}>
                   <Link
                     href="/creator/signup"
                     className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-8 py-3.5 text-sm font-semibold text-primary shadow-[0_0_30px_rgba(255,255,255,0.12)] transition-all hover:shadow-[0_0_50px_rgba(255,255,255,0.25)] sm:w-auto"
@@ -66,15 +67,15 @@ export default function CTABanner() {
                     Join as a creator
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </Link>
-                </motion.div>
-                <motion.div whileHover={reduce ? undefined : { scale: 1.03 }} whileTap={reduce ? undefined : { scale: 0.97 }}>
+                </Magnetic>
+                <Magnetic strength={0.25}>
                   <a
                     href="#businesses"
                     className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-8 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:border-white/40 hover:bg-white/10 sm:w-auto"
                   >
                     Find creators for my brand
                   </a>
-                </motion.div>
+                </Magnetic>
               </div>
             </div>
           </div>

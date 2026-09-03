@@ -2,23 +2,26 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle2,
   ArrowRight,
+  ArrowLeft,
   User,
   Mail,
   LinkIcon,
   BarChart2,
   Tag,
   FileText,
-  Sparkles,
-  Loader2,
   AlertCircle,
 } from 'lucide-react';
 import AuthLayout from '@/components/auth/AuthLayout';
 import PasswordInput from '@/components/auth/PasswordInput';
+import PasswordStrength from '@/components/auth/PasswordStrength';
 import GoogleButton from '@/components/auth/GoogleButton';
+import SubmitButton from '@/components/auth/SubmitButton';
+import Magnetic from '@/components/ui/Magnetic';
+import { EASE } from '@/lib/motion';
 
 const NICHES = [
   'Tech & SaaS',
@@ -33,7 +36,51 @@ const NICHES = [
   'Other Niche',
 ];
 
+const STEPS = ['Account', 'Channel', 'Niche'];
+
+const slideVariants = {
+  enter: (dir: number) => ({ opacity: 0, x: dir * 60 }),
+  center: { opacity: 1, x: 0 },
+  exit: (dir: number) => ({ opacity: 0, x: dir * -60 }),
+};
+
+function Burst() {
+  const particles = [
+    { x: 0, y: -46 }, { x: 33, y: -33 }, { x: 46, y: 0 }, { x: 33, y: 33 },
+    { x: 0, y: 46 }, { x: -33, y: 33 }, { x: -46, y: 0 }, { x: -33, y: -33 },
+    { x: 20, y: -12 }, { x: -20, y: -12 }, { x: 22, y: 20 }, { x: -22, y: 20 },
+  ];
+  return (
+    <div className="relative mx-auto flex h-16 w-16 items-center justify-center">
+      {particles.map((p, i) => (
+        <motion.span
+          key={i}
+          initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+          animate={{ x: p.x, y: p.y, opacity: 0, scale: 0.3 }}
+          transition={{ duration: 0.7, delay: 0.15 + i * 0.02, ease: 'easeOut' }}
+          className={`absolute h-1.5 w-1.5 rounded-full ${
+            i % 3 === 0 ? 'bg-accent' : i % 3 === 1 ? 'bg-primary-2' : 'bg-accent-soft'
+          }`}
+        />
+      ))}
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 18, delay: 0.1 }}
+        className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/10"
+      >
+        <CheckCircle2 className="h-8 w-8 text-accent" />
+      </motion.div>
+    </div>
+  );
+}
+
 export default function CreatorSignup() {
+  const [step, setStep] = useState(0);
+  const [dir, setDir] = useState(1);
+  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -43,13 +90,55 @@ export default function CreatorSignup() {
     niche: NICHES[0],
     bio: '',
   });
+
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [registeredCreator, setRegisteredCreator] = useState<any | null>(null);
   const [emailConfigured, setEmailConfigured] = useState(false);
 
+  const validateStep = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (step === 0) {
+      if (!formData.name.trim()) errs.name = 'Your name is required.';
+      if (!/^\S+@\S+\.\S+$/.test(formData.email))
+        errs.email = 'Enter a valid email address.';
+      if (formData.password.length < 8)
+        errs.password = 'Use at least 8 characters.';
+    }
+    if (step === 1) {
+      if (!formData.channel_url.trim())
+        errs.channel_url = 'Paste your channel or profile link.';
+      else if (!/^https?:\/\/.+/.test(formData.channel_url))
+        errs.channel_url = 'Link must start with https://';
+      if (!formData.subscriber_count || Number(formData.subscriber_count) < 0)
+        errs.subscriber_count = 'Enter your audience size.';
+    }
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const next = () => {
+    if (!validateStep()) return;
+    setError('');
+    setDir(1);
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  };
+
+  const back = () => {
+    setError('');
+    setFieldErrors({});
+    setDir(-1);
+    setStep((s) => Math.max(s - 1, 0));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (step < STEPS.length - 1) {
+      next();
+      return;
+    }
+    if (!validateStep()) return;
+
     setLoading(true);
     setError('');
 
@@ -66,6 +155,7 @@ export default function CreatorSignup() {
         throw new Error(data.error || 'Registration failed.');
       }
 
+      setSuccess(true);
       setEmailConfigured(Boolean(data.emailConfigured));
       setRegisteredCreator(data.creator);
     } catch (err: any) {
@@ -89,14 +179,7 @@ export default function CreatorSignup() {
         ]}
       >
         <div className="text-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 18, delay: 0.15 }}
-            className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/10"
-          >
-            <CheckCircle2 className="h-8 w-8 text-accent" />
-          </motion.div>
+          <Burst />
 
           <h3 className="mt-6 text-2xl font-semibold tracking-tight text-foreground">
             Welcome, {registeredCreator.name?.split(' ')[0]}!
@@ -156,10 +239,7 @@ export default function CreatorSignup() {
           </div>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/creator/login"
-              className="btn-primary group flex-1 py-3.5"
-            >
+            <Link href="/creator/login" className="btn-primary group flex-1 py-3.5">
               Go to login
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
@@ -171,6 +251,9 @@ export default function CreatorSignup() {
       </AuthLayout>
     );
   }
+
+  const fieldClass = (field: string) =>
+    `dl-input ${fieldErrors[field] ? 'border-danger/50 focus:border-danger/60 focus:ring-danger/20' : ''}`;
 
   return (
     <AuthLayout
@@ -185,6 +268,31 @@ export default function CreatorSignup() {
         'You get paid, then we get paid',
       ]}
     >
+      {/* Progress rail */}
+      <div className="mb-6">
+        <div className="mb-2 flex items-center justify-between text-xs">
+          <span className="font-semibold uppercase tracking-wider text-muted">
+            Step {step + 1} of {STEPS.length}
+          </span>
+          <span className="font-semibold text-accent">{STEPS[step]}</span>
+        </div>
+        <div className="flex gap-2">
+          {STEPS.map((label, i) => (
+            <div key={label} className="h-1.5 flex-1 overflow-hidden rounded-full bg-border">
+              <motion.div
+                initial={false}
+                animate={{
+                  scaleX: i < step ? 1 : i === step ? 0.45 : 0,
+                  opacity: i <= step ? 1 : 0,
+                }}
+                transition={{ duration: 0.35, ease: EASE }}
+                className="h-full w-full origin-left rounded-full bg-gradient-to-r from-primary-2 to-accent"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -196,162 +304,251 @@ export default function CreatorSignup() {
         </motion.div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label htmlFor="name" className="dl-label">
-              Full name
-            </label>
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
-              <input
-                id="name"
-                type="text"
-                required
-                placeholder="Alex Morgan"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="dl-input pl-11"
-              />
-            </div>
-          </div>
-          <div>
-            <label htmlFor="email" className="dl-label">
-              Email address
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
-              <input
-                id="email"
-                type="email"
-                required
-                autoComplete="email"
-                placeholder="alex@creator.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="dl-input pl-11"
-              />
-            </div>
-          </div>
-        </div>
+      <form onSubmit={handleSubmit}>
+        <AnimatePresence mode="wait" custom={dir} initial={false}>
+          <motion.div
+            key={step}
+            custom={dir}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.35, ease: EASE }}
+          >
+            {step === 0 && (
+              <div className="space-y-5">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.08 }}
+                >
+                  <label htmlFor="name" className="dl-label">
+                    Full name
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+                    <input
+                      id="name"
+                      type="text"
+                      placeholder="Alex Morgan"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className={`${fieldClass('name')} pl-11`}
+                    />
+                  </div>
+                  {fieldErrors.name && (
+                    <p className="mt-1.5 text-xs font-medium text-danger">{fieldErrors.name}</p>
+                  )}
+                </motion.div>
 
-        <div className="grid gap-5 sm:grid-cols-2">
-          <PasswordInput
-            id="password"
-            value={formData.password}
-            onChange={(password) => setFormData({ ...formData, password })}
-            placeholder="Min. 8 characters"
-            autoComplete="new-password"
-            label="Password"
-          />
-          <div>
-            <label htmlFor="channel" className="dl-label">
-              Channel / profile link
-            </label>
-            <div className="relative">
-              <LinkIcon className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
-              <input
-                id="channel"
-                type="url"
-                required
-                placeholder="https://youtube.com/@channel"
-                value={formData.channel_url}
-                onChange={(e) =>
-                  setFormData({ ...formData, channel_url: e.target.value })
-                }
-                className="dl-input pl-11"
-              />
-            </div>
-          </div>
-        </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.16 }}
+                >
+                  <label htmlFor="email" className="dl-label">
+                    Email address
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+                    <input
+                      id="email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="alex@creator.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className={`${fieldClass('email')} pl-11`}
+                    />
+                  </div>
+                  {fieldErrors.email && (
+                    <p className="mt-1.5 text-xs font-medium text-danger">{fieldErrors.email}</p>
+                  )}
+                </motion.div>
 
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label htmlFor="subs" className="dl-label">
-              Follower / subscriber count
-            </label>
-            <div className="relative">
-              <BarChart2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
-              <input
-                id="subs"
-                type="number"
-                required
-                min="0"
-                placeholder="45000"
-                value={formData.subscriber_count}
-                onChange={(e) =>
-                  setFormData({ ...formData, subscriber_count: e.target.value })
-                }
-                className="dl-input pl-11"
-              />
-            </div>
-          </div>
-          <div>
-            <label htmlFor="niche" className="dl-label">
-              Niche / category
-            </label>
-            <div className="relative">
-              <Tag className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
-              <select
-                id="niche"
-                value={formData.niche}
-                onChange={(e) => setFormData({ ...formData, niche: e.target.value })}
-                className="dl-input appearance-none pl-11"
-              >
-                {NICHES.map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.24 }}
+                >
+                  <PasswordInput
+                    id="password"
+                    value={formData.password}
+                    onChange={(password) => setFormData({ ...formData, password })}
+                    placeholder="Min. 8 characters"
+                    autoComplete="new-password"
+                    label="Password"
+                  />
+                  {fieldErrors.password ? (
+                    <p className="mt-1.5 text-xs font-medium text-danger">{fieldErrors.password}</p>
+                  ) : (
+                    <PasswordStrength password={formData.password} />
+                  )}
+                </motion.div>
+              </div>
+            )}
 
-        <div>
-          <label htmlFor="bio" className="dl-label">
-            Short bio / channel overview{' '}
-            <span className="font-normal normal-case text-muted-2">(optional)</span>
-          </label>
-          <div className="relative">
-            <FileText className="absolute left-4 top-3.5 h-4 w-4 text-muted-2" />
-            <textarea
-              id="bio"
-              rows={3}
-              placeholder="Briefly describe your content, primary platform, target audience, or past sponsorships..."
-              value={formData.bio}
-              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-              className="dl-input resize-none pl-11"
-            />
-          </div>
-        </div>
+            {step === 1 && (
+              <div className="space-y-5">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.08 }}
+                >
+                  <label htmlFor="channel" className="dl-label">
+                    Channel / profile link
+                  </label>
+                  <div className="relative">
+                    <LinkIcon className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+                    <input
+                      id="channel"
+                      type="url"
+                      placeholder="https://youtube.com/@channel"
+                      value={formData.channel_url}
+                      onChange={(e) =>
+                        setFormData({ ...formData, channel_url: e.target.value })
+                      }
+                      className={`${fieldClass('channel_url')} pl-11`}
+                    />
+                  </div>
+                  {fieldErrors.channel_url && (
+                    <p className="mt-1.5 text-xs font-medium text-danger">
+                      {fieldErrors.channel_url}
+                    </p>
+                  )}
+                </motion.div>
 
-        <button type="submit" disabled={loading} className="btn-primary w-full py-3.5">
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Creating your profile...
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4" />
-              Join the network — it&apos;s free
-            </>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.16 }}
+                >
+                  <label htmlFor="subs" className="dl-label">
+                    Follower / subscriber count
+                  </label>
+                  <div className="relative">
+                    <BarChart2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+                    <input
+                      id="subs"
+                      type="number"
+                      min="0"
+                      placeholder="45000"
+                      value={formData.subscriber_count}
+                      onChange={(e) =>
+                        setFormData({ ...formData, subscriber_count: e.target.value })
+                      }
+                      className={`${fieldClass('subscriber_count')} pl-11`}
+                    />
+                  </div>
+                  {fieldErrors.subscriber_count && (
+                    <p className="mt-1.5 text-xs font-medium text-danger">
+                      {fieldErrors.subscriber_count}
+                    </p>
+                  )}
+                </motion.div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-5">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.08 }}
+                >
+                  <label htmlFor="niche" className="dl-label">
+                    Niche / category
+                  </label>
+                  <div className="relative">
+                    <Tag className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+                    <select
+                      id="niche"
+                      value={formData.niche}
+                      onChange={(e) => setFormData({ ...formData, niche: e.target.value })}
+                      className="dl-input appearance-none pl-11"
+                    >
+                      {NICHES.map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.16 }}
+                >
+                  <label htmlFor="bio" className="dl-label">
+                    Short bio / channel overview{' '}
+                    <span className="font-normal normal-case text-muted-2">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <FileText className="absolute left-4 top-3.5 h-4 w-4 text-muted-2" />
+                    <textarea
+                      id="bio"
+                      rows={4}
+                      placeholder="Briefly describe your content, primary platform, target audience, or past sponsorships..."
+                      value={formData.bio}
+                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                      className="dl-input resize-none pl-11"
+                    />
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Controls */}
+        <div className="mt-7 flex gap-3">
+          {step > 0 && (
+            <button
+              type="button"
+              onClick={back}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-5 py-3.5 text-sm font-semibold text-muted transition-all hover:border-border-strong hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
           )}
-        </button>
+
+          <Magnetic strength={0.15} className={step > 0 ? 'flex-1' : 'w-full'}>
+            {step < STEPS.length - 1 ? (
+              <button
+                type="submit"
+                className="btn-primary w-full py-3.5"
+              >
+                Continue
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            ) : (
+              <SubmitButton
+                loading={loading}
+                success={success}
+                label="Join the network — it's free"
+                loadingLabel="Creating your profile..."
+                successLabel="You're in!"
+                className="btn-primary w-full py-3.5"
+              />
+            )}
+          </Magnetic>
+        </div>
       </form>
 
-      <GoogleButton />
+      {step === 0 && <GoogleButton />}
 
-      <div className="pt-1 text-center text-sm text-muted">
-          Already registered?{' '}
-          <Link
-            href="/creator/login"
-            className="font-semibold text-accent transition-colors hover:text-foreground"
-          >
-            Log in
-          </Link>
-        </div>
+      <div className="pt-5 text-center text-sm text-muted">
+        Already registered?{' '}
+        <Link
+          href="/creator/login"
+          className="font-semibold text-accent transition-colors hover:text-foreground"
+        >
+          Log in
+        </Link>
+      </div>
     </AuthLayout>
   );
 }

@@ -3,6 +3,7 @@ import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import { Analytics } from '@vercel/analytics/next';
 import SiteBackground from '@/components/ui/SiteBackground';
+import Preloader from '@/components/ui/Preloader';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -37,6 +38,7 @@ export default function RootLayout({
       >
         <SiteBackground />
         {children}
+        <Preloader />
         <Analytics />
       </body>
     </html>

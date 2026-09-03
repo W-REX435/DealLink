@@ -5,10 +5,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { motion } from 'framer-motion';
-import { LogIn, Loader2, Mail, AlertCircle } from 'lucide-react';
+import { LogIn, Mail, AlertCircle } from 'lucide-react';
 import AuthLayout from '@/components/auth/AuthLayout';
 import PasswordInput from '@/components/auth/PasswordInput';
 import GoogleButton from '@/components/auth/GoogleButton';
+import SubmitButton from '@/components/auth/SubmitButton';
+import Magnetic from '@/components/ui/Magnetic';
 
 export default function CreatorLogin() {
   const router = useRouter();
@@ -16,7 +18,9 @@ export default function CreatorLogin() {
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [shake, setShake] = useState(0);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,13 +36,18 @@ export default function CreatorLogin() {
 
       if (res?.error) {
         setError('Invalid email or password.');
+        setShake((s) => s + 1);
         return;
       }
 
-      router.push('/creator/dashboard');
-      router.refresh();
+      setSuccess(true);
+      setTimeout(() => {
+        router.push('/creator/dashboard');
+        router.refresh();
+      }, 700);
     } catch {
       setError('Failed to log in. Please try again.');
+      setShake((s) => s + 1);
     } finally {
       setLoading(false);
     }
@@ -67,69 +76,95 @@ export default function CreatorLogin() {
         </motion.div>
       )}
 
-      <form onSubmit={handleLogin} className="space-y-5">
-        <div>
-          <label htmlFor="email" className="dl-label">
-            Email address
-          </label>
-          <div className="relative">
-            <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
-            <input
-              id="email"
-              type="email"
-              required
-              autoComplete="email"
-              placeholder="you@channel.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="dl-input pl-11"
-            />
-          </div>
-        </div>
-
-        <PasswordInput
-          id="password"
-          value={password}
-          onChange={setPassword}
-          autoComplete="current-password"
-        />
-
-        <div className="flex items-center justify-between">
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-muted">
-            <input
-              type="checkbox"
-              checked={remember}
-              onChange={(e) => setRemember(e.target.checked)}
-              className="h-4 w-4 rounded border-border-strong accent-primary-2"
-            />
-            Remember me
-          </label>
-          <Link
-            href="/creator/forgot-password"
-            className="text-sm font-semibold text-accent transition-colors hover:text-foreground"
+      {/* Shake wrapper */}
+      <motion.div
+        key={shake}
+        animate={shake > 0 ? { x: [0, -10, 10, -6, 6, -3, 3, 0] } : { x: 0 }}
+        transition={{ duration: 0.45, ease: 'easeInOut' }}
+      >
+        <form onSubmit={handleLogin} className="space-y-5">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
           >
-            Forgot password?
-          </Link>
-        </div>
+            <label htmlFor="email" className="dl-label">
+              Email address
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+              <input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="you@channel.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="dl-input pl-11"
+              />
+            </div>
+          </motion.div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn-primary w-full py-3.5"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Logging in...
-            </>
-          ) : (
-            <>
-              <LogIn className="h-4 w-4" />
-              Log in to dashboard
-            </>
-          )}
-        </button>
-      </form>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <PasswordInput
+              id="password"
+              value={password}
+              onChange={setPassword}
+              autoComplete="current-password"
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="flex items-center justify-between"
+          >
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-muted">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="h-4 w-4 rounded border-border-strong accent-primary-2"
+              />
+              Remember me
+            </label>
+            <Link
+              href="/creator/forgot-password"
+              className="text-sm font-semibold text-accent transition-colors hover:text-foreground"
+            >
+              Forgot password?
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.4 }}
+          >
+            <Magnetic strength={0.15} className="w-full">
+              <SubmitButton
+                loading={loading}
+                success={success}
+                label={
+                  <>
+                    <LogIn className="h-4 w-4" />
+                    Log in to dashboard
+                  </>
+                }
+                loadingLabel="Logging in..."
+                successLabel="Welcome back!"
+                className="btn-primary w-full py-3.5"
+              />
+            </Magnetic>
+          </motion.div>
+        </form>
+      </motion.div>
 
       <GoogleButton />
 
