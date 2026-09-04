@@ -7,23 +7,22 @@ declare global {
   } | undefined;
 }
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error(
-    'MONGODB_URI is not set. Copy .env.example to .env.local and fill in your MongoDB connection string.'
-  );
-}
-
 const cached = global.mongooseCache ?? { conn: null, promise: null };
 global.mongooseCache = cached;
 
 export async function dbConnect(): Promise<mongoose.Mongoose> {
   if (cached.conn) return cached.conn;
 
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error(
+      'MONGODB_URI is not set. Copy .env.example to .env.local and fill in your MongoDB connection string.'
+    );
+  }
+
   if (!cached.promise) {
     cached.promise = mongoose
-      .connect(MONGODB_URI!, {
+      .connect(uri, {
         bufferCommands: false,
       })
       .then((m) => m);
