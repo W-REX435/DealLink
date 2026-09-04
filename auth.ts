@@ -1,56 +1,46 @@
 import NextAuth from 'next-auth';
-import type { Provider } from 'next-auth/providers';
 import Credentials from 'next-auth/providers/credentials';
-import Google from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
+import { authConfig } from '@/auth.config';
 import { dbConnect, User } from '@/lib/mongo';
 
-const providers: Provider[] = [
-  Credentials({
-    name: 'credentials',
-    credentials: {
-      email: { label: 'Email', type: 'email' },
-      password: { label: 'Password', type: 'password' },
-    },
-    async authorize(credentials) {
-      if (!credentials?.email || !credentials?.password) return null;
-
-      await dbConnect();
-      const email = (credentials.email as string).toLowerCase().trim();
-      const user = await User.findOne({ email }).select('+password');
-
-      if (!user || !user.password) return null;
-
-      const valid = await bcrypt.compare(credentials.password as string, user.password);
-      if (!valid) return null;
-
-      return {
-        id: user._id.toString(),
-        name: user.name,
-        email: user.email,
-        image: user.image || undefined,
-      };
-    },
-  }),
-];
-
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  providers.push(
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      allowDangerousEmailAccountLinking: true,
-    })
-  );
-}
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: 'jwt' },
-  pages: {
-    signIn: '/creator/login',
-  },
-  providers,
+  ...authConfig,
+  providers: [
+    ...authConfig.providers,
+    Credentials({
+      name: 'credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+
+        await dbConnect();
+        const email = (credentials.email as string).toLowerCase().trim();
+        const user = await User.findOne({ email }).select('+password');
+
+        if (!user || !user.password) return null;
+
+        const valid = await bcrypt.compare(
+          credentials.password as string,
+          user.password
+        );
+        if (!valid) return null;
+
+        return {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+          image: user.image || undefined,
+        };
+      },
+    }),
+  ],
   callbacks: {
+    ...authConfig.callbacks,
+
     async signIn({ user, account }) {
       if (account?.provider === 'google' && user.email) {
         await dbConnect();
@@ -93,17 +83,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
       return token;
-    },
-
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = ((token.role as string) || 'creator') as
-          | 'creator'
-          | 'business'
-          | 'admin';
-      }
-      return session;
     },
   },
 });

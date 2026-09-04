@@ -3,7 +3,7 @@
  * Run: npm run seed
  */
 import bcrypt from 'bcryptjs';
-import { dbConnect, User, BusinessLead } from '../lib/mongo';
+import { dbConnect, User, BusinessLead, CampaignBrief, Match, Deal } from '../lib/mongo';
 
 const CREATORS = [
   {
@@ -101,7 +101,87 @@ async function main() {
     console.log('⏭  Skipping lead (already exists)');
   }
 
-  console.log(`\nDone. ${created} new creators seeded.`);
+  // Demo business user (role: business)
+  let business = await User.findOne({ email: 'jordan@vectra.ai' });
+  if (!business) {
+    business = await User.create({
+      name: 'Jordan Blake',
+      email: 'jordan@vectra.ai',
+      password: await bcrypt.hash('business123', 10),
+      role: 'business',
+      company: 'Vectra Brand Tools',
+      emailVerified: new Date(),
+    });
+    console.log('✅ Created demo business: Vectra Brand Tools <jordan@vectra.ai> (password: business123)');
+  } else {
+    console.log('⏭  Skipping business user (already exists)');
+  }
+
+  // Demo brief (Tech & SaaS, min 20k audience → matches several seeds)
+  let brief = await CampaignBrief.findOne({ product: 'Vectra v2 — Creator Workflow Tool' });
+  if (!brief) {
+    brief = await CampaignBrief.create({
+      businessId: business._id.toString(),
+      businessName: business.name,
+      company: 'Vectra Brand Tools',
+      product: 'Vectra v2 — Creator Workflow Tool',
+      description:
+        'We are launching the v2 of our creator workflow tool and looking for creators who can demo it in a dedicated video. Focus on workflow automation, speed, and how it saves creators hours every week.',
+      niche: 'Tech & SaaS',
+      minAudience: 20000,
+      budget: '$1,500 – $5,000',
+      deliverables: '1 dedicated video',
+      status: 'submitted',
+    });
+    console.log('✅ Created demo brief: Vectra v2 (Tech & SaaS, 20K+ audience)');
+  } else {
+    console.log('⏭  Skipping brief (already exists)');
+  }
+
+  // Demo match + deal with Alex Rivera (accepted → proposed deal)
+  const alex = await User.findOne({ email: 'alex@techreviewshq.com' });
+  if (alex) {
+    let match = await Match.findOne({ briefId: brief._id.toString() });
+    if (!match) {
+      match = await Match.create({
+        briefId: brief._id.toString(),
+        creatorId: alex._id.toString(),
+        creatorName: alex.name,
+        businessName: business.name,
+        company: 'Vectra Brand Tools',
+        product: brief.product,
+        status: 'accepted',
+      });
+      console.log('✅ Created demo match: Alex Rivera ↔ Vectra');
+    }
+    let deal = await Deal.findOne({ briefId: brief._id.toString() });
+    if (!deal) {
+      await Deal.create({
+        briefId: brief._id.toString(),
+        matchId: match._id.toString(),
+        creatorId: alex._id.toString(),
+        creatorName: alex.name,
+        creatorEmail: alex.email,
+        businessId: business._id.toString(),
+        businessName: business.name,
+        businessEmail: business.email,
+        company: 'Vectra Brand Tools',
+        product: brief.product,
+        niche: brief.niche,
+        deliverables: brief.deliverables,
+        budget: brief.budget,
+        dealValue: 2400,
+        status: 'proposed',
+      });
+      console.log('✅ Created demo deal: Vectra v2 × Alex Rivera ($2,400, proposed)');
+    } else {
+      console.log('⏭  Skipping deal (already exists)');
+    }
+  }
+
+  console.log('\nDone. Demo credentials:');
+  console.log('  Creators: any seed email / creator123 (e.g. alex@techreviewshq.com)');
+  console.log('  Business: jordan@vectra.ai / business123');
   process.exit(0);
 }
 
