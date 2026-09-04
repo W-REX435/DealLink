@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { dbConnect, User, CampaignBrief, Match } from '@/lib/mongo';
+import { dbConnect, User, CampaignBrief, Match, Deal } from '@/lib/mongo';
+import { sendOfferAcceptedEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,6 +105,33 @@ export async function POST(req: Request) {
     if (action === 'accept') {
       brief.status = 'matched';
       await brief.save();
+
+      // Create the deal pipeline entry
+      const business = await User.findById(brief.businessId);
+      await Deal.create({
+        briefId: brief._id.toString(),
+        matchId: match._id.toString(),
+        creatorId: user._id.toString(),
+        creatorName: user.name,
+        creatorEmail: user.email,
+        businessId: brief.businessId,
+        businessName: brief.businessName,
+        businessEmail: business?.email || '',
+        company: brief.company,
+        product: brief.product,
+        niche: brief.niche,
+        deliverables: brief.deliverables,
+        budget: brief.budget,
+        status: 'proposed',
+      });
+
+      if (business?.email) {
+        await sendOfferAcceptedEmail(business.email, {
+          businessName: business.name,
+          product: brief.product,
+          creatorName: user.name,
+        });
+      }
     }
 
     return NextResponse.json({

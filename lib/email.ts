@@ -176,3 +176,87 @@ export async function sendBusinessRejectedEmail(
     html: layout(content),
   });
 }
+
+export async function sendOfferAcceptedEmail(
+  to: string,
+  opts: { businessName: string; product: string; creatorName: string }
+) {
+  if (!isEmailConfigured()) return;
+  const content = `
+    <h1 style="margin:0 0 12px;font-size:22px;color:#0F1B33;">A creator accepted your brief!</h1>
+    <p style="margin:0 0 20px;font-size:15px;color:#54637D;line-height:1.7;">
+      Good news — <strong>${opts.creatorName}</strong> accepted your brief for
+      <strong>${opts.product}</strong>. Head to your dashboard to kick off the deal.
+    </p>
+    ${button(`${process.env.APP_URL}/business/dashboard`, 'Open my dashboard')}
+  `;
+  await transport.sendMail({
+    from: process.env.EMAIL_FROM || 'DealLink <no-reply@deallink.co>',
+    to,
+    subject: `${opts.creatorName} accepted your brief — ${opts.product}`,
+    html: layout(content),
+  });
+}
+
+export async function sendDealActivatedEmail(
+  to: string,
+  opts: { name: string; product: string; company: string; dealValue: number }
+) {
+  if (!isEmailConfigured()) return;
+  const content = `
+    <h1 style="margin:0 0 12px;font-size:22px;color:#0F1B33;">Your deal is live, ${opts.name.split(' ')[0]}!</h1>
+    <p style="margin:0 0 20px;font-size:15px;color:#54637D;line-height:1.7;">
+      <strong>${opts.company}</strong> confirmed the <strong>${opts.product}</strong> deal
+      at <strong>$${opts.dealValue.toLocaleString()}</strong>. Time to create something great.
+    </p>
+    ${button(`${process.env.APP_URL}/creator/dashboard`, 'Open my dashboard')}
+  `;
+  await transport.sendMail({
+    from: process.env.EMAIL_FROM || 'DealLink <no-reply@deallink.co>',
+    to,
+    subject: `Your ${opts.product} deal is live`,
+    html: layout(content),
+  });
+}
+
+export async function sendDealCompletedEmail(
+  to: string,
+  opts: { businessName: string; product: string; creatorName: string }
+) {
+  if (!isEmailConfigured()) return;
+  const content = `
+    <h1 style="margin:0 0 12px;font-size:22px;color:#0F1B33;">Content delivered!</h1>
+    <p style="margin:0 0 20px;font-size:15px;color:#54637D;line-height:1.7;">
+      <strong>${opts.creatorName}</strong> marked the <strong>${opts.product}</strong> deal as
+      completed. Review the content and mark the deal as paid from your dashboard.
+    </p>
+    ${button(`${process.env.APP_URL}/business/dashboard`, 'Review deal')}
+  `;
+  await transport.sendMail({
+    from: process.env.EMAIL_FROM || 'DealLink <no-reply@deallink.co>',
+    to,
+    subject: `${opts.creatorName} completed the ${opts.product} deal`,
+    html: layout(content),
+  });
+}
+
+export async function sendDealPaidEmail(
+  to: string,
+  opts: { name: string; product: string; company: string; amount: number }
+) {
+  if (!isEmailConfigured()) return;
+  const content = `
+    <h1 style="margin:0 0 12px;font-size:22px;color:#0F1B33;">You got paid! 🎉</h1>
+    <p style="margin:0 0 20px;font-size:15px;color:#54637D;line-height:1.7;">
+      <strong>${opts.company}</strong> marked the <strong>${opts.product}</strong> deal as paid
+      — <strong>$${opts.amount.toLocaleString()}</strong>. Great work, ${opts.name.split(' ')[0]}!
+    </p>
+    ${button(`${process.env.APP_URL}/creator/dashboard`, 'Open my dashboard')}
+  `;
+  await transport.sendMail({
+    from: process.env.EMAIL_FROM || 'DealLink <no-reply@deallink.co>',
+    to,
+    subject: `You got paid — ${opts.product}`,
+    html: layout(content),
+  });
+}

@@ -240,3 +240,64 @@ const MatchSchema = new Schema<IMatch>(
 MatchSchema.index({ briefId: 1, creatorId: 1 }, { unique: true });
 
 export const Match = models.Match || model<IMatch>('Match', MatchSchema);
+
+/* ------------------------------------------------------------------ */
+/*  Deal (sponsorship pipeline)                                        */
+/* ------------------------------------------------------------------ */
+
+export type DealStatus = 'proposed' | 'active' | 'completed' | 'paid' | 'cancelled';
+
+export interface IDeal extends Document {
+  briefId: string;
+  matchId: string;
+  creatorId: string;
+  creatorName: string;
+  creatorEmail: string;
+  businessId: string;
+  businessName: string;
+  businessEmail: string;
+  company: string;
+  product: string;
+  niche: string;
+  deliverables: string;
+  budget: string;
+  dealValue: number;
+  paidAmount: number;
+  status: DealStatus;
+  startedAt?: Date;
+  completedAt?: Date;
+  paidAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const DealSchema = new Schema<IDeal>(
+  {
+    briefId: { type: String, required: true },
+    matchId: { type: String, required: true },
+    creatorId: { type: String, required: true },
+    creatorName: { type: String, required: true },
+    creatorEmail: { type: String, required: true },
+    businessId: { type: String, required: true },
+    businessName: { type: String, required: true },
+    businessEmail: { type: String, required: true },
+    company: { type: String, required: true },
+    product: { type: String, required: true },
+    niche: { type: String, required: true },
+    deliverables: { type: String, required: true },
+    budget: { type: String, required: true },
+    dealValue: { type: Number, default: 0 },
+    paidAmount: { type: Number, default: 0 },
+    status: {
+      type: String,
+      enum: ['proposed', 'active', 'completed', 'paid', 'cancelled'],
+      default: 'proposed',
+    },
+    startedAt: { type: Date },
+    completedAt: { type: Date },
+    paidAt: { type: Date },
+  },
+  { timestamps: true }
+);
+
+export const Deal = models.Deal || model<IDeal>('Deal', DealSchema);

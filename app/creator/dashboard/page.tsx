@@ -15,6 +15,7 @@ import {
   Mail,
   Calendar,
   Sparkles,
+  Handshake,
   LayoutDashboard,
   Inbox,
   Users,
@@ -27,6 +28,7 @@ import {
 import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
 import SubmitButton from '@/components/auth/SubmitButton';
+import DealsPanel from '@/components/deals/DealsPanel';
 import { EASE } from '@/lib/motion';
 
 const NICHES = [
@@ -52,7 +54,7 @@ export default function CreatorDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [creator, setCreator] = useState<any | null>(null);
-  const [tab, setTab] = useState<'overview' | 'edit' | 'matches'>('overview');
+  const [tab, setTab] = useState<'overview' | 'edit' | 'matches' | 'deals'>('overview');
 
   const [isEditing, setIsEditing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
@@ -268,6 +270,7 @@ export default function CreatorDashboard() {
                 { id: 'overview', label: 'Overview', icon: LayoutDashboard },
                 { id: 'edit', label: 'Edit profile', icon: Edit3 },
                 { id: 'matches', label: `Matches (${inbox.length})`, icon: Inbox },
+                { id: 'deals', label: 'Deals', icon: Handshake },
               ] as const
             ).map((t) => (
               <button
@@ -642,6 +645,9 @@ export default function CreatorDashboard() {
               )}
             </div>
           )}
+
+          {/* DEALS */}
+          {tab === 'deals' && <DealsPanel role="creator" />}
         </div>
       </main>
 

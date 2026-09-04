@@ -15,12 +15,14 @@ import {
   Sparkles,
   ClipboardList,
   Plus,
+  Handshake,
   Loader2,
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
+import DealsPanel from '@/components/deals/DealsPanel';
 import { EASE } from '@/lib/motion';
 
 const NICHES = [
@@ -62,7 +64,7 @@ export default function BusinessDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any | null>(null);
-  const [tab, setTab] = useState<'overview' | 'browse' | 'briefs'>('overview');
+  const [tab, setTab] = useState<'overview' | 'browse' | 'briefs' | 'deals'>('overview');
 
   const [creators, setCreators] = useState<any[]>([]);
   const [creatorsTotal, setCreatorsTotal] = useState(0);
@@ -223,6 +225,7 @@ export default function BusinessDashboard() {
                 { id: 'overview', label: 'Overview', icon: LayoutDashboard },
                 { id: 'browse', label: 'Browse creators', icon: Users },
                 { id: 'briefs', label: 'My campaigns', icon: ClipboardList },
+                { id: 'deals', label: 'Deals', icon: Handshake },
               ] as const
             ).map((t) => (
               <button
@@ -536,6 +539,9 @@ export default function BusinessDashboard() {
               </div>
             </div>
           )}
+
+          {/* DEALS */}
+          {tab === 'deals' && <DealsPanel role="business" />}
         </div>
       </main>
 
