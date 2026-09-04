@@ -1,15 +1,15 @@
 'use client';
 
 import { useRef } from 'react';
+import Link from 'next/link';
 import {
   motion,
   useScroll,
   useTransform,
   useReducedMotion,
 } from 'framer-motion';
-import { Building, BarChart, Target, ShieldCheck } from 'lucide-react';
+import { Building, BarChart, Target, ShieldCheck, ArrowRight } from 'lucide-react';
 import Reveal from '@/components/ui/Reveal';
-import BusinessLeadForm from '@/components/BusinessLeadForm';
 import { EASE } from '@/lib/motion';
 
 const BENEFITS = [
@@ -41,7 +41,7 @@ export default function ForBusinesses() {
     target: sectionRef,
     offset: ['start end', 'end start'],
   });
-  const formY = useTransform(scrollYProgress, [0, 1], [50, -50]);
+  const cardY = useTransform(scrollYProgress, [0, 1], [50, -50]);
   const glowOpacity = useTransform(scrollYProgress, [0.2, 0.6, 1], [0.3, 1, 0.4]);
 
   return (
@@ -108,12 +108,52 @@ export default function ForBusinesses() {
             </div>
           </div>
 
-          {/* Lead form with parallax */}
+          {/* Apply card with parallax */}
           <motion.div
-            style={reduce ? undefined : { y: formY }}
+            style={reduce ? undefined : { y: cardY }}
             className="lg:col-span-6"
           >
-            <BusinessLeadForm />
+            <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-7 shadow-high backdrop-blur-md sm:p-9">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/15">
+                  <Building className="h-5 w-5 text-accent-soft" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold tracking-tight text-white">
+                    Get access to the marketplace
+                  </h3>
+                  <p className="text-xs text-white/50">
+                    Apply in 2 minutes — we review every application by hand.
+                  </p>
+                </div>
+              </div>
+
+              <ul className="mt-6 space-y-3">
+                {[
+                  'Browse the full vetted creator network',
+                  'Submit campaign briefs in minutes',
+                  'Get hand-curated creator matches',
+                  'Approval within 1-2 business days',
+                ].map((point) => (
+                  <li key={point} className="flex items-center gap-2.5 text-sm text-white/75">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent-soft" />
+                    {point}
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href="/business/apply"
+                className="group mt-7 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-primary shadow-[0_0_30px_rgba(255,255,255,0.08)] transition-all hover:shadow-[0_0_50px_rgba(255,255,255,0.18)]"
+              >
+                Apply for access
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+
+              <p className="mt-4 text-center text-[11px] text-white/40">
+                No commitment. Existing partners can log in anytime.
+              </p>
+            </div>
           </motion.div>
         </div>
       </div>

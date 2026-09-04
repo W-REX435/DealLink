@@ -70,7 +70,7 @@ export default function CTABanner() {
                 </Magnetic>
                 <Magnetic strength={0.25}>
                   <a
-                    href="#businesses"
+                    href="/business/apply"
                     className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-8 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:border-white/40 hover:bg-white/10 sm:w-auto"
                   >
                     Find creators for my brand

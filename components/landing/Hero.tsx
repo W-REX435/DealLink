@@ -126,7 +126,7 @@ export default function Hero() {
           </Magnetic>
           <Magnetic strength={0.2}>
             <a
-              href="#businesses"
+              href="/business/apply"
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface/60 px-8 py-4 text-base font-semibold text-foreground backdrop-blur-sm transition-all hover:border-border-strong hover:bg-surface sm:w-auto"
             >
               I&apos;m a brand

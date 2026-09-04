@@ -41,6 +41,8 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password?: string;
+  role: 'creator' | 'business' | 'admin';
+  company?: string;
   emailVerified: Date | null;
   image?: string;
   channelUrl?: string;
@@ -66,6 +68,8 @@ const UserSchema = new Schema<IUser>(
       trim: true,
     },
     password: { type: String, select: false },
+    role: { type: String, enum: ['creator', 'business', 'admin'], default: 'creator' },
+    company: { type: String, trim: true },
     emailVerified: { type: Date, default: null },
     image: { type: String },
     channelUrl: { type: String, trim: true },
@@ -108,3 +112,92 @@ const BusinessLeadSchema = new Schema<IBusinessLead>(
 
 export const BusinessLead =
   models.BusinessLead || model<IBusinessLead>('BusinessLead', BusinessLeadSchema);
+
+/* ------------------------------------------------------------------ */
+/*  BusinessApplication (Apply → Approve → Invite)                     */
+/* ------------------------------------------------------------------ */
+
+export type ApplicationStatus = 'pending' | 'approved' | 'rejected';
+
+export interface IBusinessApplication extends Document {
+  contactName: string;
+  email: string;
+  company: string;
+  website?: string;
+  budgetRange: string;
+  goals: string;
+  timeline: string;
+  status: ApplicationStatus;
+  inviteToken?: string;
+  inviteExpires?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const BusinessApplicationSchema = new Schema<IBusinessApplication>(
+  {
+    contactName: { type: String, required: true, trim: true },
+    email: { type: String, required: true, lowercase: true, trim: true },
+    company: { type: String, required: true, trim: true },
+    website: { type: String, default: '', trim: true },
+    budgetRange: { type: String, required: true },
+    goals: { type: String, required: true },
+    timeline: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
+    inviteToken: { type: String, select: false },
+    inviteExpires: { type: Date, select: false },
+  },
+  { timestamps: true }
+);
+
+export const BusinessApplication =
+  models.BusinessApplication ||
+  model<IBusinessApplication>('BusinessApplication', BusinessApplicationSchema);
+
+/* ------------------------------------------------------------------ */
+/*  CampaignBrief (business → creators)                                */
+/* ------------------------------------------------------------------ */
+
+export type BriefStatus = 'submitted' | 'reviewing' | 'matched';
+
+export interface ICampaignBrief extends Document {
+  businessId: string;
+  businessName: string;
+  company: string;
+  product: string;
+  description: string;
+  niche: string;
+  minAudience: number;
+  budget: string;
+  deliverables: string;
+  status: BriefStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const CampaignBriefSchema = new Schema<ICampaignBrief>(
+  {
+    businessId: { type: String, required: true },
+    businessName: { type: String, required: true },
+    company: { type: String, required: true },
+    product: { type: String, required: true, trim: true },
+    description: { type: String, required: true },
+    niche: { type: String, required: true },
+    minAudience: { type: Number, default: 0 },
+    budget: { type: String, required: true },
+    deliverables: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ['submitted', 'reviewing', 'matched'],
+      default: 'submitted',
+    },
+  },
+  { timestamps: true }
+);
+
+export const CampaignBrief =
+  models.CampaignBrief || model<ICampaignBrief>('CampaignBrief', CampaignBriefSchema);

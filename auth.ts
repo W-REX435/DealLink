@@ -86,6 +86,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.id = dbUser._id.toString();
             token.emailVerified = Boolean(dbUser.emailVerified);
             token.niche = dbUser.niche || null;
+            token.role = (dbUser.role as string) || 'creator';
           }
         } catch {
           // keep stale token values
@@ -97,6 +98,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.role = ((token.role as string) || 'creator') as
+          | 'creator'
+          | 'business'
+          | 'admin';
       }
       return session;
     },

@@ -25,6 +25,8 @@ export async function GET() {
         id: user._id.toString(),
         name: user.name,
         email: user.email,
+        role: user.role || 'creator',
+        company: user.company || '',
         emailVerified: Boolean(user.emailVerified),
         channel_url: user.channelUrl || '',
         subscriber_count: user.subscriberCount || 0,

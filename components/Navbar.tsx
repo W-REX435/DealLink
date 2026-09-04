@@ -20,6 +20,7 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [loggedInCreator, setLoggedInCreator] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState('creator');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -32,11 +33,15 @@ export default function Navbar() {
       .then((data) => {
         if (data.authenticated && data.creator) {
           setLoggedInCreator(data.creator.name);
+          if (data.creator.role) setUserRole(data.creator.role);
         }
       })
       .catch(() => {});
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  const dashboardHref =
+    userRole === 'business' ? '/business/dashboard' : '/creator/dashboard';
 
   return (
     <motion.header
@@ -68,7 +73,7 @@ export default function Navbar() {
           <ThemeToggle />
           {mounted && loggedInCreator ? (
             <Link
-              href="/creator/dashboard"
+              href={dashboardHref}
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-primary-2 hover:shadow-mid"
             >
               <UserCheck className="h-4 w-4 text-accent-soft" />
@@ -134,7 +139,7 @@ export default function Navbar() {
               <div className="flex flex-col gap-2 border-t border-border pt-3">
                 {mounted && loggedInCreator ? (
                   <Link
-                    href="/creator/dashboard"
+                    href={dashboardHref}
                     onClick={() => setMobileMenuOpen(false)}
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white"
                   >

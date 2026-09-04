@@ -41,8 +41,18 @@ export default function CreatorLogin() {
       }
 
       setSuccess(true);
+
+      let role = 'creator';
+      try {
+        const me = await fetch('/api/creators/me');
+        const meData = await me.json();
+        if (meData.authenticated && meData.creator?.role) {
+          role = meData.creator.role;
+        }
+      } catch {}
+
       setTimeout(() => {
-        router.push('/creator/dashboard');
+        router.push(role === 'business' ? '/business/dashboard' : '/creator/dashboard');
         router.refresh();
       }, 700);
     } catch {

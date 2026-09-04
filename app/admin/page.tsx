@@ -12,6 +12,8 @@ import {
   ExternalLink,
   Search,
   RefreshCw,
+  CheckCircle2,
+  ShieldCheck,
   X,
   Sparkles
 } from 'lucide-react';
@@ -37,9 +39,55 @@ export default function AdminPage() {
   const [data, setData] = useState<any>({ creators: [], leads: [], stats: { totalCreators: 0, totalLeads: 0 } });
   const [dataLoading, setDataLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'creators' | 'leads'>('creators');
+  const [activeTab, setActiveTab] = useState<'creators' | 'leads' | 'applications'>('creators');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCreator, setSelectedCreator] = useState<any | null>(null);
+
+  const [applications, setApplications] = useState<any[]>([]);
+  const [appsLoading, setAppsLoading] = useState(false);
+  const [appsActionLoading, setAppsActionLoading] = useState<string | null>(null);
+  const [appsMessage, setAppsMessage] = useState('');
+
+  const loadApplications = async () => {
+    setAppsLoading(true);
+    try {
+      const res = await fetch('/api/admin/applications');
+      const json = await res.json();
+      if (res.ok) setApplications(json.applications || []);
+    } catch {
+    } finally {
+      setAppsLoading(false);
+    }
+  };
+
+  const handleApplicationAction = async (id: string, action: 'approve' | 'reject') => {
+    setAppsActionLoading(id);
+    setAppsMessage('');
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, action }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setAppsMessage(json.error || 'Action failed.');
+      } else {
+        setAppsMessage(
+          action === 'approve'
+            ? json.emailConfigured
+              ? 'Approved — invite email sent.'
+              : 'Approved — email not configured, no invite sent.'
+            : 'Application rejected.'
+        );
+        loadApplications();
+      }
+    } catch (err: any) {
+      setAppsMessage(err.message || 'Action failed.');
+    } finally {
+      setAppsActionLoading(null);
+    }
+  };
 
   // Fetch admin data on mount
   const checkAuthAndFetchData = async () => {
@@ -65,6 +113,10 @@ export default function AdminPage() {
   useEffect(() => {
     checkAuthAndFetchData();
   }, []);
+
+  useEffect(() => {
+    if (authenticated && activeTab === 'applications') loadApplications();
+  }, [authenticated, activeTab]);
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -282,6 +334,18 @@ export default function AdminPage() {
               <Building2 className="w-4 h-4" />
               <span>Business Leads ({(data.leads || []).length})</span>
             </button>
+
+            <button
+              onClick={() => setActiveTab('applications')}
+              className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+                activeTab === 'applications'
+                  ? 'bg-[#2563EB] text-white shadow-sm'
+                  : 'bg-gray-100 text-[#54637D] hover:text-[#0F2A52]'
+              }`}
+            >
+              <Shield className="w-4 h-4" />
+              <span>Applications ({applications.filter((a) => a.status === 'pending').length})</span>
+            </button>
           </div>
 
           {/* Search Input */}
@@ -442,6 +506,93 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* Tab Content 3: Business Applications */}
+        {activeTab === 'applications' && (
+          <div className="deal-card bg-white border border-[#DCE5F3] overflow-hidden">
+            {appsMessage && (
+              <div className="m-4 rounded-lg border border-[#2563EB]/30 bg-[#2563EB]/5 p-3.5 text-sm font-medium text-[#2563EB]">
+                {appsMessage}
+              </div>
+            )}
+            {appsLoading ? (
+              <div className="py-16 text-center text-sm text-[#54637D]">Loading applications...</div>
+            ) : applications.length === 0 ? (
+              <div className="py-16 text-center text-sm text-[#54637D]">
+                No business applications yet.
+              </div>
+            ) : (
+              <div className="divide-y divide-[#DCE5F3]">
+                {applications.map((a: any) => (
+                  <div key={a.id} className="p-5">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-base font-bold text-[#0F2A52]">{a.company}</span>
+                          <span
+                            className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold capitalize ${
+                              a.status === 'pending'
+                                ? 'border-orange-300 bg-orange-50 text-orange-600'
+                                : a.status === 'approved'
+                                ? 'border-[#2563EB]/30 bg-[#2563EB]/5 text-[#2563EB]'
+                                : 'border-red-300 bg-red-50 text-red-600'
+                            }`}
+                          >
+                            {a.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[#54637D]">
+                          {a.contactName} · {a.email}
+                          {a.website ? (
+                            <>
+                              {' · '}
+                              <a
+                                href={a.website.startsWith('http') ? a.website : `https://${a.website}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[#2563EB] underline"
+                              >
+                                {a.website}
+                              </a>
+                            </>
+                          ) : null}
+                        </p>
+                        <p className="text-xs text-[#54637D]">
+                          <strong>Budget:</strong> {a.budgetRange} · <strong>Timeline:</strong> {a.timeline}
+                        </p>
+                        <p className="max-w-2xl text-sm leading-relaxed text-[#0F1B33]">{a.goals}</p>
+                        <p className="text-[11px] text-[#54637D]">
+                          Submitted {new Date(a.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+
+                      {a.status === 'pending' ? (
+                        <div className="flex shrink-0 items-center gap-2">
+                          <button
+                            onClick={() => handleApplicationAction(a.id, 'approve')}
+                            disabled={appsActionLoading === a.id}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563EB] px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-[#0F2A52] disabled:opacity-50"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            {appsActionLoading === a.id ? 'Working...' : 'Approve'}
+                          </button>
+                          <button
+                            onClick={() => handleApplicationAction(a.id, 'reject')}
+                            disabled={appsActionLoading === a.id}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-600 transition-colors hover:bg-red-100 disabled:opacity-50"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                            Reject
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

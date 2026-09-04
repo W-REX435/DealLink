@@ -91,8 +91,7 @@ export async function sendVerificationEmail(to: string, name: string, token: str
   });
 }
 
-export async function sendPasswordResetEmail(to: string, name: string, token: string) {
-  if (!isEmailConfigured()) {
+export async function sendPasswordResetEmail(to: string, name: string, token: string) {  if (!isEmailConfigured()) {
     console.warn('[email] SMTP not configured — reset email skipped for', to);
     return;
   }
@@ -115,6 +114,65 @@ export async function sendPasswordResetEmail(to: string, name: string, token: st
     from: process.env.EMAIL_FROM || 'DealLink <no-reply@deallink.co>',
     to,
     subject: 'Reset your DealLink password',
+    html: layout(content),
+  });
+}
+
+export async function sendBusinessInviteEmail(
+  to: string,
+  contactName: string,
+  company: string,
+  token: string
+) {
+  if (!isEmailConfigured()) {
+    console.warn('[email] SMTP not configured — business invite email skipped for', to);
+    return;
+  }
+  const link = `${process.env.APP_URL}/business/set-password?token=${token}`;
+  const content = `
+    <h1 style="margin:0 0 12px;font-size:22px;color:#0F1B33;">You&apos;re approved, ${contactName}!</h1>
+    <p style="margin:0 0 20px;font-size:15px;color:#54637D;line-height:1.7;">
+      Great news — <strong>${company}</strong> has been approved to join the DealLink
+      creator marketplace. Set a password to activate your business account and start
+      browsing vetted creators.
+    </p>
+    ${button(link, 'Set my password')}
+    <p style="margin:20px 0 0;font-size:13px;color:#8B98AC;line-height:1.7;">
+      Or paste this link into your browser:<br />
+      <a href="${link}" style="color:#2563EB;word-break:break-all;">${link}</a>
+    </p>
+    <p style="margin:16px 0 0;font-size:12px;color:#8B98AC;">This invite expires in 7 days.</p>
+  `;
+  await transport.sendMail({
+    from: process.env.EMAIL_FROM || 'DealLink <no-reply@deallink.co>',
+    to,
+    subject: `${company} is approved — activate your DealLink account`,
+    html: layout(content),
+  });
+}
+
+export async function sendBusinessRejectedEmail(
+  to: string,
+  contactName: string,
+  company: string
+) {
+  if (!isEmailConfigured()) {
+    console.warn('[email] SMTP not configured — rejection email skipped for', to);
+    return;
+  }
+  const content = `
+    <h1 style="margin:0 0 12px;font-size:22px;color:#0F1B33;">Thanks for applying, ${contactName}</h1>
+    <p style="margin:0 0 20px;font-size:15px;color:#54637D;line-height:1.7;">
+      We reviewed <strong>${company}</strong>&apos;s application and we&apos;re not able to
+      approve it at this time. If your product or campaign changes, feel free to apply
+      again in the future.
+    </p>
+    <p style="margin:16px 0 0;font-size:12px;color:#8B98AC;">— The DealLink team</p>
+  `;
+  await transport.sendMail({
+    from: process.env.EMAIL_FROM || 'DealLink <no-reply@deallink.co>',
+    to,
+    subject: `Update on your DealLink application (${company})`,
     html: layout(content),
   });
 }

@@ -76,6 +76,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/business/apply" className="transition-colors hover:text-white">
+                  Apply as a business
+                </Link>
+              </li>
+              <li>
                 <Link href="/creator/login" className="transition-colors hover:text-white">
                   Creator login
                 </Link>
