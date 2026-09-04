@@ -1,4 +1,5 @@
 'use client';
+import { track } from '@vercel/analytics/react';
 
 import Link from 'next/link';
 import { Suspense, useState } from 'react';
@@ -46,6 +47,7 @@ function SetPasswordInner() {
       if (!res.ok) throw new Error(data.error || 'Failed to activate account.');
 
       setAccount({ email: data.email, company: data.company });
+      track('business_activated');
       setSuccess(true);
 
       const login = await signIn('credentials', {

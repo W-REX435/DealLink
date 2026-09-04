@@ -130,8 +130,12 @@ export default function Footer() {
         <div className="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs text-white/40 sm:flex-row">
           <p>© {new Date().getFullYear()} DealLink Inc. All rights reserved.</p>
           <div className="flex items-center gap-6">
-            <span className="transition-colors hover:text-white/70">Privacy Policy</span>
-            <span className="transition-colors hover:text-white/70">Terms of Service</span>
+            <Link href="/legal/privacy" className="transition-colors hover:text-white/70">
+              Privacy Policy
+            </Link>
+            <Link href="/legal/terms" className="transition-colors hover:text-white/70">
+              Terms of Service
+            </Link>
             <Link
               href="/admin"
               className="inline-flex items-center gap-1.5 text-white/50 transition-colors hover:text-white"

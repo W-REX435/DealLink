@@ -1,4 +1,5 @@
 'use client';
+import { track } from '@vercel/analytics/react';
 
 import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -78,6 +79,7 @@ export default function DealsPanel({ role }: { role: 'creator' | 'business' }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Action failed.');
+      track(`deal_${action}`);
       load();
     } catch (err: any) {
       setError(err.message);

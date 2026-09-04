@@ -210,11 +210,12 @@ export default function AdminPage() {
               )}
               <form onSubmit={handleAdminLogin} className="space-y-5">
                 <div>
-                  <label className="dl-label">
+                  <label htmlFor="admin-passcode" className="dl-label">
                     <Lock className="mr-1.5 inline h-3.5 w-3.5 text-accent" />
                     Admin passcode
                   </label>
                   <input
+                    id="admin-passcode"
                     type="password"
                     required
                     placeholder="Enter passcode"

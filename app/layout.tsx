@@ -7,9 +7,27 @@ import Preloader from '@/components/ui/Preloader';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'DealLink | Connecting creators with brands that need real reach',
+  metadataBase: new URL(process.env.APP_URL || 'https://deallink.co'),
+  title: {
+    default: 'DealLink | Creators meet brands',
+    template: '%s',
+  },
   description:
     'DealLink is the platform connecting content creators with businesses looking for authentic sponsorships, real audience reach, and performance-backed results.',
+  openGraph: {
+    title: 'DealLink | Creators meet brands',
+    description:
+      'The bridge between creators and the brands that need them. Authentic sponsorships, real audience reach, performance-backed results.',
+    siteName: 'DealLink',
+    type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'DealLink | Creators meet brands',
+    description:
+      'The bridge between creators and the brands that need them.',
+  },
 };
 
 const themeScript = `

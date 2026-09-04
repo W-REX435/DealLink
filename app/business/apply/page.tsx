@@ -1,4 +1,5 @@
 'use client';
+import { track } from '@vercel/analytics/react';
 
 import Link from 'next/link';
 import { useState } from 'react';
@@ -86,6 +87,7 @@ export default function BusinessApply() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to submit application.');
       setSuccess(true);
+      track('business_apply');
       setTimeout(() => setDone(true), 900);
     } catch (err: any) {
       setError(err.message || 'Failed to submit application.');

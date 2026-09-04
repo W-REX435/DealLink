@@ -1,4 +1,5 @@
 'use client';
+import { track } from '@vercel/analytics/react';
 
 import Link from 'next/link';
 import { useState } from 'react';
@@ -41,6 +42,7 @@ export default function CreatorLogin() {
       }
 
       setSuccess(true);
+      track('login');
 
       let role = 'creator';
       try {

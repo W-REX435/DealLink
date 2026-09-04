@@ -1,4 +1,5 @@
 'use client';
+import { track } from '@vercel/analytics/react';
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -148,6 +149,7 @@ export default function BusinessDashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to submit brief.');
       setBriefDone(true);
+      track('brief_submitted');
       setBriefForm({
         product: '',
         niche: NICHES[1],

@@ -1,4 +1,5 @@
 'use client';
+import { track } from '@vercel/analytics/react';
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -175,6 +176,7 @@ export default function CreatorDashboard() {
       if (!res.ok) {
         setMatchesMessage(data.error || 'Action failed.');
       } else {
+        track(action === 'accept' ? 'match_accepted' : 'match_declined');
         setMatchesMessage(
           action === 'accept'
             ? 'Deal accepted! The brand will reach out to you.'

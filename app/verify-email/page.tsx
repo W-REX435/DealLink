@@ -1,4 +1,5 @@
 'use client';
+import { track } from '@vercel/analytics/react';
 
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
@@ -38,7 +39,10 @@ function VerifyEmailInner() {
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Verification failed.');
-        if (!cancelled) setStatus('success');
+        if (!cancelled) {
+          setStatus('success');
+          track('email_verified');
+        }
       })
       .catch((err) => {
         if (!cancelled) {

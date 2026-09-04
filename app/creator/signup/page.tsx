@@ -1,4 +1,5 @@
 'use client';
+import { track } from '@vercel/analytics/react';
 
 import Link from 'next/link';
 import { useState } from 'react';
@@ -156,6 +157,7 @@ export default function CreatorSignup() {
       }
 
       setSuccess(true);
+      track('signup', { role: 'creator' });
       setEmailConfigured(Boolean(data.emailConfigured));
       setRegisteredCreator(data.creator);
     } catch (err: any) {
