@@ -201,3 +201,42 @@ const CampaignBriefSchema = new Schema<ICampaignBrief>(
 
 export const CampaignBrief =
   models.CampaignBrief || model<ICampaignBrief>('CampaignBrief', CampaignBriefSchema);
+
+/* ------------------------------------------------------------------ */
+/*  Match (brief ↔ creator decision)                                   */
+/* ------------------------------------------------------------------ */
+
+export type MatchStatus = 'pending' | 'accepted' | 'declined';
+
+export interface IMatch extends Document {
+  briefId: string;
+  creatorId: string;
+  creatorName: string;
+  businessName: string;
+  company: string;
+  product: string;
+  status: MatchStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const MatchSchema = new Schema<IMatch>(
+  {
+    briefId: { type: String, required: true },
+    creatorId: { type: String, required: true },
+    creatorName: { type: String, required: true },
+    businessName: { type: String, required: true },
+    company: { type: String, required: true },
+    product: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'declined'],
+      default: 'pending',
+    },
+  },
+  { timestamps: true }
+);
+
+MatchSchema.index({ briefId: 1, creatorId: 1 }, { unique: true });
+
+export const Match = models.Match || model<IMatch>('Match', MatchSchema);

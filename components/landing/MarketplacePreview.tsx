@@ -174,12 +174,19 @@ export default function MarketplacePreview() {
         <Reveal delay={0.2}>
           <p className="mt-10 text-center text-sm text-muted">
             <Link
+              href="/marketplace"
+              className="font-semibold text-accent underline-offset-4 transition-colors hover:text-foreground hover:underline"
+            >
+              Browse the full marketplace
+            </Link>{' '}
+            — or{' '}
+            <Link
               href="/creator/signup"
               className="font-semibold text-accent underline-offset-4 transition-colors hover:text-foreground hover:underline"
             >
-              Want your profile listed here?
+              get your profile listed
             </Link>{' '}
-            — join the network free in under 2 minutes.
+            free in under 2 minutes.
           </p>
         </Reveal>
       </div>
