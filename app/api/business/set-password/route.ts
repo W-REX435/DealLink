@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server';
+import { rateLimit, rateLimitKey } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 import { dbConnect, BusinessApplication, User } from '@/lib/mongo';
 
 export async function POST(req: Request) {
+  const rl = rateLimit(rateLimitKey(req), 10);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: `Too many requests. Please try again in ${rl.retryAfterSeconds}s.` },
+      { status: 429 }
+    );
+  }
+
   try {
     const { token, password } = await req.json();
 

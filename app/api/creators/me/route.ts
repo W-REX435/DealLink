@@ -59,6 +59,15 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'User not found.' }, { status: 404 });
     }
 
+    const max = (v: unknown, n: number) =>
+      typeof v === 'string' && v.trim().length > n;
+    if (max(body.name, 80) || max(body.channel_url, 300) || max(body.bio, 1000)) {
+      return NextResponse.json(
+        { error: 'Some fields are too long.' },
+        { status: 400 }
+      );
+    }
+
     if (body.name !== undefined) user.name = body.name;
     if (body.channel_url !== undefined) user.channelUrl = body.channel_url;
     if (body.subscriber_count !== undefined)

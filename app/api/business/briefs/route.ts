@@ -65,6 +65,15 @@ export async function POST(req: Request) {
       );
     }
 
+    const max = (v: unknown, n: number) =>
+      typeof v === 'string' && v.trim().length > n;
+    if (max(product, 120) || max(description, 2000) || max(deliverables, 200)) {
+      return NextResponse.json(
+        { error: 'Some fields are too long.' },
+        { status: 400 }
+      );
+    }
+
     const brief = await CampaignBrief.create({
       businessId: user._id.toString(),
       businessName: user.name,

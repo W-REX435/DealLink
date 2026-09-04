@@ -1,10 +1,19 @@
 import { NextResponse } from 'next/server';
+import { rateLimit, rateLimitKey } from '@/lib/rate-limit';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { dbConnect, User } from '@/lib/mongo';
 import { sendVerificationEmail, isEmailConfigured } from '@/lib/email';
 
 export async function POST(req: Request) {
+  const rl = rateLimit(rateLimitKey(req), 10);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: `Too many requests. Please try again in ${rl.retryAfterSeconds}s.` },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await req.json();
     const {
@@ -20,6 +29,15 @@ export async function POST(req: Request) {
     if (!name || !email || !password || !channel_url || !niche) {
       return NextResponse.json(
         { error: 'Please fill in all required fields (Name, Email, Password, Channel Link, Niche).' },
+        { status: 400 }
+      );
+    }
+
+    const max = (v: unknown, n: number) =>
+      typeof v === 'string' && v.trim().length > n;
+    if (max(name, 80) || max(channel_url, 300) || max(niche, 60) || max(bio, 1000)) {
+      return NextResponse.json(
+        { error: 'Some fields are too long.' },
         { status: 400 }
       );
     }

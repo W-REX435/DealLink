@@ -1,8 +1,7 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import Footer from '@/components/Footer';
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   Shield,
   Users,
@@ -12,57 +11,102 @@ import {
   ExternalLink,
   Search,
   RefreshCw,
-  CheckCircle2,
-  ShieldCheck,
   X,
-  Sparkles
+  CheckCircle2,
+  ClipboardList,
+  Handshake,
+  Inbox,
+  Loader2,
+  Sparkles,
 } from 'lucide-react';
-import Logo from '@/components/Logo';
+import Footer from '@/components/Footer';
+import Navbar from '@/components/Navbar';
+import { EASE } from '@/lib/motion';
 
-const Navbar = dynamic(() => import('@/components/Navbar'), {
-  ssr: false,
-  loading: () => (
-    <header className="bg-[#0F2A52] text-white border-b border-[#2563EB] h-20 flex items-center sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex items-center justify-between">
-        <Logo size="md" variant="color" />
-      </div>
-    </header>
-  ),
-});
+type Tab = 'creators' | 'businesses' | 'applications' | 'briefs' | 'deals' | 'leads';
+
+const DEAL_BADGES: Record<string, string> = {
+  proposed: 'border-accent/30 bg-accent/10 text-accent',
+  active: 'border-primary-2/30 bg-primary-2/10 text-primary-2',
+  completed: 'border-warning/30 bg-warning/10 text-warning',
+  paid: 'border-success/30 bg-success/10 text-success',
+  cancelled: 'border-border bg-soft-2 text-muted-2',
+};
+
+const BRIEF_STATUSES = ['submitted', 'reviewing', 'matched'];
 
 export default function AdminPage() {
   const [passcode, setPasscode] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
 
-  const [data, setData] = useState<any>({ creators: [], leads: [], stats: { totalCreators: 0, totalLeads: 0 } });
+  const [data, setData] = useState<any>({
+    creators: [],
+    businesses: [],
+    applications: [],
+    briefs: [],
+    deals: [],
+    matches: [],
+    leads: [],
+    stats: {},
+  });
   const [dataLoading, setDataLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'creators' | 'leads' | 'applications'>('creators');
+  const [activeTab, setActiveTab] = useState<Tab>('creators');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCreator, setSelectedCreator] = useState<any | null>(null);
 
-  const [applications, setApplications] = useState<any[]>([]);
-  const [appsLoading, setAppsLoading] = useState(false);
-  const [appsActionLoading, setAppsActionLoading] = useState<string | null>(null);
-  const [appsMessage, setAppsMessage] = useState('');
+  const [actionId, setActionId] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState('');
 
-  const loadApplications = async () => {
-    setAppsLoading(true);
+  const fetchData = useCallback(async () => {
+    setDataLoading(true);
     try {
-      const res = await fetch('/api/admin/applications');
+      const res = await fetch('/api/admin/data');
       const json = await res.json();
-      if (res.ok) setApplications(json.applications || []);
+      if (res.ok && json.authenticated) {
+        setAuthenticated(true);
+        setData(json);
+      } else {
+        setAuthenticated(false);
+      }
     } catch {
+      setAuthenticated(false);
     } finally {
-      setAppsLoading(false);
+      setAuthLoading(false);
+      setDataLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    setLoginLoading(true);
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passcode.trim() }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Incorrect admin passcode.');
+      fetchData();
+    } catch (err: any) {
+      setLoginError(err.message || 'Authentication failed.');
+    } finally {
+      setLoginLoading(false);
     }
   };
 
   const handleApplicationAction = async (id: string, action: 'approve' | 'reject') => {
-    setAppsActionLoading(id);
-    setAppsMessage('');
+    setActionId(id);
+    setActionMessage('');
     try {
       const res = await fetch('/api/admin/applications', {
         method: 'POST',
@@ -71,110 +115,63 @@ export default function AdminPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setAppsMessage(json.error || 'Action failed.');
+        setActionMessage(json.error || 'Action failed.');
       } else {
-        setAppsMessage(
+        setActionMessage(
           action === 'approve'
             ? json.emailConfigured
               ? 'Approved — invite email sent.'
               : 'Approved — email not configured, no invite sent.'
             : 'Application rejected.'
         );
-        loadApplications();
+        fetchData();
       }
     } catch (err: any) {
-      setAppsMessage(err.message || 'Action failed.');
+      setActionMessage(err.message || 'Action failed.');
     } finally {
-      setAppsActionLoading(null);
+      setActionId(null);
     }
   };
 
-  // Fetch admin data on mount
-  const checkAuthAndFetchData = async () => {
-    setDataLoading(true);
+  const handleBriefStatus = async (id: string, status: string) => {
+    setActionId(id);
+    setActionMessage('');
     try {
-      const res = await fetch('/api/admin/data');
-      const json = await res.json();
-
-      if (res.ok && json.authenticated) {
-        setAuthenticated(true);
-        setData(json);
-      } else {
-        setAuthenticated(false);
-      }
-    } catch (err) {
-      setAuthenticated(false);
-    } finally {
-      setAuthLoading(false);
-      setDataLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    checkAuthAndFetchData();
-  }, []);
-
-  useEffect(() => {
-    if (authenticated && activeTab === 'applications') loadApplications();
-  }, [authenticated, activeTab]);
-
-  const handleAdminLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError('');
-
-    try {
-      const res = await fetch('/api/admin/login', {
+      const res = await fetch('/api/admin/briefs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: passcode.trim() }),
+        body: JSON.stringify({ id, status }),
       });
-
       const json = await res.json();
-
       if (!res.ok) {
-        throw new Error(json.error || 'Incorrect admin passcode.');
-      }
-
-      setAuthenticated(true);
-      checkAuthAndFetchData();
-    } catch (err: any) {
-      if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
-        setLoginError('Could not connect to the server. Please ensure the server is running.');
+        setActionMessage(json.error || 'Failed to update brief.');
       } else {
-        setLoginError(err.message || 'Authentication failed.');
+        setActionMessage('Brief status updated.');
+        fetchData();
       }
+    } catch (err: any) {
+      setActionMessage(err.message || 'Failed to update brief.');
+    } finally {
+      setActionId(null);
     }
   };
 
-  // Filter creators
-  const filteredCreators = (data.creators || []).filter((c: any) => {
+  const filterBySearch = (items: any[], fields: string[]) => {
     const q = searchQuery.toLowerCase();
-    return (
-      c.name.toLowerCase().includes(q) ||
-      c.email.toLowerCase().includes(q) ||
-      c.niche.toLowerCase().includes(q) ||
-      c.bio.toLowerCase().includes(q)
+    if (!q) return items;
+    return items.filter((item) =>
+      fields.some((f) => String(item[f] ?? '').toLowerCase().includes(q))
     );
-  });
-
-  // Filter leads
-  const filteredLeads = (data.leads || []).filter((l: any) => {
-    const q = searchQuery.toLowerCase();
-    return (
-      l.name.toLowerCase().includes(q) ||
-      l.company.toLowerCase().includes(q) ||
-      l.email.toLowerCase().includes(q) ||
-      l.promotion_needs.toLowerCase().includes(q)
-    );
-  });
+  };
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#EEF4FB]">
+      <div className="flex min-h-screen flex-col">
         <Navbar />
-        <main className="flex-1 flex items-center justify-center py-20">
-          <div className="text-[#0F2A52] font-semibold text-lg animate-pulse">
-            Verifying Rex&apos;s admin access...
+        <main className="flex flex-1 items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3 text-foreground">
+            <Loader2 className="h-6 w-6 animate-spin text-accent" />
+            <p className="text-sm font-semibold">Verifying admin access...</p>
           </div>
         </main>
         <Footer />
@@ -184,366 +181,365 @@ export default function AdminPage() {
 
   if (!authenticated) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#EEF4FB]">
+      <div className="flex min-h-screen flex-col">
         <Navbar />
-
-        <main className="flex-1 py-16 px-4 max-w-md mx-auto w-full flex flex-col justify-center">
-          <div className="text-center space-y-3 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-[#0B1F3A] text-[#22D3EE] flex items-center justify-center mx-auto border border-[#2563EB]">
-              <Shield className="w-6 h-6" />
+        <main className="flex flex-1 items-center justify-center px-4 py-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE }}
+            className="w-full max-w-sm"
+          >
+            <div className="text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-accent-soft">
+                <Shield className="h-6 w-6" />
+              </div>
+              <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
+                Admin portal
+              </h1>
+              <p className="mt-1 text-sm text-muted">
+                Enter the passcode to manage the network.
+              </p>
             </div>
-            <h1 className="text-3xl font-extrabold text-[#0F2A52]">Rex&apos;s Admin Portal</h1>
-            <p className="text-sm text-[#54637D]">Enter passcode to view registered creators & leads</p>
-          </div>
 
-          <div className="deal-card p-6 sm:p-8 bg-white border border-[#DCE5F3]">
-            {loginError && (
-              <div className="mb-5 p-3.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg font-medium">
-                {loginError}
-              </div>
-            )}
-
-            <form onSubmit={handleAdminLogin} className="space-y-5">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#0F2A52] mb-1.5 flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-[#2563EB]" />
-                  <span>Admin Passcode</span>
-                </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Enter passcode (e.g. admin123)"
-                  value={passcode}
-                  onChange={(e) => setPasscode(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-[#DCE5F3] rounded-lg text-sm text-[#0F1B33] focus:outline-none focus:border-[#2563EB]"
-                />
-                <p className="text-[11px] text-[#54637D] mt-1">Default passcode: <code className="bg-gray-100 px-1 py-0.5 rounded text-[#2563EB]">admin123</code></p>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 px-6 bg-[#0F2A52] hover:bg-[#2563EB] text-white font-bold text-sm rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
-              >
-                <Shield className="w-4 h-4 text-[#22D3EE]" />
-                <span>Unlock Internal Admin View</span>
-              </button>
-            </form>
-          </div>
+            <div className="dl-card mt-7 p-6 shadow-mid sm:p-8">
+              {loginError && (
+                <div className="mb-5 rounded-xl border border-danger/25 bg-danger/5 p-3.5 text-sm font-medium text-danger">
+                  {loginError}
+                </div>
+              )}
+              <form onSubmit={handleAdminLogin} className="space-y-5">
+                <div>
+                  <label className="dl-label">
+                    <Lock className="mr-1.5 inline h-3.5 w-3.5 text-accent" />
+                    Admin passcode
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Enter passcode"
+                    value={passcode}
+                    onChange={(e) => setPasscode(e.target.value)}
+                    className="dl-input"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loginLoading}
+                  className="btn-primary w-full py-3.5"
+                >
+                  {loginLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Unlocking...
+                    </>
+                  ) : (
+                    <>
+                      <Shield className="h-4 w-4" />
+                      Unlock admin view
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </motion.div>
         </main>
-
         <Footer />
       </div>
     );
   }
 
+  const stats = data.stats || {};
+
+  const statCards = [
+    { label: 'Creators', value: stats.totalCreators || 0, icon: Users },
+    { label: 'Businesses', value: stats.totalBusinesses || 0, icon: Building2 },
+    { label: 'Pending applications', value: stats.pendingApplications || 0, icon: ClipboardList },
+    { label: 'Campaign briefs', value: stats.totalBriefs || 0, icon: Inbox },
+    { label: 'Deals', value: stats.totalDeals || 0, icon: Handshake },
+    { label: 'Matches', value: stats.totalMatches || 0, icon: Sparkles },
+  ];
+
+  const tabs: { id: Tab; label: string; count: number }[] = [
+    { id: 'creators', label: 'Creators', count: data.creators?.length || 0 },
+    { id: 'businesses', label: 'Businesses', count: data.businesses?.length || 0 },
+    { id: 'applications', label: 'Applications', count: (data.applications || []).filter((a: any) => a.status === 'pending').length },
+    { id: 'briefs', label: 'Briefs', count: data.briefs?.length || 0 },
+    { id: 'deals', label: 'Deals', count: data.deals?.length || 0 },
+    { id: 'leads', label: 'Leads', count: data.leads?.length || 0 },
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#EEF4FB]">
+    <div className="flex min-h-screen flex-col">
       <Navbar />
 
-      <main className="flex-1 py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        
-        {/* Admin Header */}
-        <div className="bg-[#0B1F3A] text-white p-6 sm:p-8 rounded-xl border border-[#2563EB] mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 bg-[#0F2A52] text-[#22D3EE] px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 border border-[#2563EB]">
-              <Shield className="w-3.5 h-3.5" />
-              <span>Internal Admin Directory (Rex)</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
-              DealLink Network Overview
-            </h1>
-            <p className="text-xs sm:text-sm text-sky-200/80">
-              Persisted working database of registered tech creators and business lead submissions.
-            </p>
-          </div>
-
-          <button
-            onClick={checkAuthAndFetchData}
-            disabled={dataLoading}
-            className="inline-flex items-center gap-2 bg-[#2563EB] hover:bg-[#22D3EE] text-white text-xs font-bold px-4 py-2.5 rounded-lg border border-[#22D3EE] transition-colors"
+      <main className="flex-1 px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE }}
+            className="relative mb-8 overflow-hidden rounded-2xl bg-primary p-6 text-white shadow-high sm:p-8"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${dataLoading ? 'animate-spin' : ''}`} />
-            <span>Refresh Data</span>
-          </button>
-        </div>
-
-        {/* Stats Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-          <div className="deal-card p-6 bg-white border border-[#DCE5F3] space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#54637D]">Total Registered Creators</span>
-              <div className="w-9 h-9 rounded-lg bg-[#EEF4FB] border border-[#22D3EE] flex items-center justify-center text-[#2563EB]">
-                <Users className="w-5 h-5" />
+            <div className="bg-dot-grid bg-dot-grid-fade absolute inset-0 opacity-40" />
+            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-accent/20 blur-[90px]" />
+            <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-accent-soft">
+                  <Shield className="h-3.5 w-3.5" />
+                  Internal admin
+                </span>
+                <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
+                  DealLink network overview
+                </h1>
+                <p className="mt-1 text-sm text-white/60">
+                  Creators, businesses, applications, briefs, and deals.
+                </p>
               </div>
+              <button
+                onClick={fetchData}
+                disabled={dataLoading}
+                className="inline-flex items-center gap-2 self-start rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-xs font-semibold text-white/90 backdrop-blur-sm transition-colors hover:bg-white/20"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${dataLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
             </div>
-            <div className="text-3xl font-extrabold text-[#0F2A52]">
-              {data?.stats?.totalCreators || 0}
-            </div>
-            <p className="text-xs text-[#22D3EE] font-semibold">Active in match list</p>
+          </motion.div>
+
+          {/* Stats */}
+          <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            {statCards.map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, ease: EASE, delay: i * 0.05 }}
+                className="dl-card p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-2">
+                    {stat.label}
+                  </span>
+                  <stat.icon className="h-3.5 w-3.5 text-accent" />
+                </div>
+                <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+                  {stat.value}
+                </p>
+              </motion.div>
+            ))}
           </div>
 
-          <div className="deal-card p-6 bg-white border border-[#DCE5F3] space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#54637D]">Business Lead Inquiries</span>
-              <div className="w-9 h-9 rounded-lg bg-[#EEF4FB] border border-[#22D3EE] flex items-center justify-center text-[#2563EB]">
-                <Building2 className="w-5 h-5" />
-              </div>
+          {/* Tabs + search */}
+          <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap gap-2">
+              {tabs.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
+                    activeTab === t.id
+                      ? 'bg-primary-2 text-white shadow-mid'
+                      : 'border border-border bg-surface/70 text-muted hover:border-border-strong hover:text-foreground'
+                  }`}
+                >
+                  {t.label}
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                      activeTab === t.id ? 'bg-white/20 text-white' : 'bg-soft-2 text-muted-2'
+                    }`}
+                  >
+                    {t.count}
+                  </span>
+                </button>
+              ))}
             </div>
-            <div className="text-3xl font-extrabold text-[#0F2A52]">
-              {data?.stats?.totalLeads || 0}
+            <div className="relative w-full lg:w-72">
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-xl border border-border bg-surface py-2.5 pl-10 pr-4 text-sm font-medium text-foreground shadow-soft transition-all placeholder:text-muted-2 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20"
+              />
             </div>
-            <p className="text-xs text-[#2563EB] font-semibold">Submitted sponsor requests</p>
           </div>
 
-          <div className="deal-card p-6 bg-[#0F2A52] text-white border border-[#2563EB] space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-sky-300">Outreach Status</span>
-              <Sparkles className="w-5 h-5 text-[#22D3EE]" />
+          {actionMessage && (
+            <div className="mb-5 rounded-xl border border-accent/30 bg-accent/10 p-4 text-sm font-semibold text-accent">
+              {actionMessage}
             </div>
-            <div className="text-xl font-bold text-white">
-              Ready for Matching
+          )}
+
+          {dataLoading && (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-accent" />
             </div>
-            <p className="text-xs text-sky-200/80">Click creator mailto links below to reach out directly</p>
-          </div>
-        </div>
+          )}
 
-        {/* Tab & Search Bar */}
-        <div className="bg-white p-4 rounded-xl border border-[#DCE5F3] mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          {/* Tabs */}
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
-              onClick={() => setActiveTab('creators')}
-              className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-                activeTab === 'creators'
-                  ? 'bg-[#2563EB] text-white shadow-sm'
-                  : 'bg-gray-100 text-[#54637D] hover:text-[#0F2A52]'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Creators ({(data.creators || []).length})</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('leads')}
-              className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-                activeTab === 'leads'
-                  ? 'bg-[#2563EB] text-white shadow-sm'
-                  : 'bg-gray-100 text-[#54637D] hover:text-[#0F2A52]'
-              }`}
-            >
-              <Building2 className="w-4 h-4" />
-              <span>Business Leads ({(data.leads || []).length})</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('applications')}
-              className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-                activeTab === 'applications'
-                  ? 'bg-[#2563EB] text-white shadow-sm'
-                  : 'bg-gray-100 text-[#54637D] hover:text-[#0F2A52]'
-              }`}
-            >
-              <Shield className="w-4 h-4" />
-              <span>Applications ({applications.filter((a) => a.status === 'pending').length})</span>
-            </button>
-          </div>
-
-          {/* Search Input */}
-          <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 text-[#54637D] absolute left-3 top-3" />
-            <input
-              type="text"
-              placeholder={`Search ${activeTab === 'creators' ? 'creators or niches' : 'companies or contacts'}...`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-2 bg-gray-50 border border-[#DCE5F3] rounded-lg text-sm text-[#0F1B33] focus:outline-none focus:border-[#2563EB]"
-            />
-          </div>
-        </div>
-
-        {/* Tab Content 1: Creator Directory */}
-        {activeTab === 'creators' && (
-          <div className="deal-card bg-white border border-[#DCE5F3] overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead className="bg-[#0F2A52] text-white uppercase text-[11px] tracking-wider">
-                  <tr>
-                    <th className="py-3.5 px-4 font-bold">Creator</th>
-                    <th className="py-3.5 px-4 font-bold">Niche</th>
-                    <th className="py-3.5 px-4 font-bold">Followers / Subscribers</th>
-                    <th className="py-3.5 px-4 font-bold">Channel / Profile Link</th>
-                    <th className="py-3.5 px-4 font-bold">Sign-Up Date</th>
-                    <th className="py-3.5 px-4 font-bold text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#DCE5F3]">
-                  {filteredCreators.length === 0 ? (
+          {/* CREATORS */}
+          {!dataLoading && activeTab === 'creators' && (
+            <div className="dl-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-primary text-white uppercase text-[11px] tracking-wider">
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-[#54637D]">
-                        No creators found matching your search query.
-                      </td>
+                      <th className="px-4 py-3.5 font-bold">Creator</th>
+                      <th className="px-4 py-3.5 font-bold">Niche</th>
+                      <th className="px-4 py-3.5 font-bold">Audience</th>
+                      <th className="px-4 py-3.5 font-bold">Verified</th>
+                      <th className="px-4 py-3.5 font-bold">Joined</th>
+                      <th className="px-4 py-3.5 text-right font-bold">Actions</th>
                     </tr>
-                  ) : (
-                    filteredCreators.map((c: any) => (
-                      <tr key={c.id} className="hover:bg-[#EEF4FB]/40 transition-colors">
-                        <td className="py-4 px-4 font-bold text-[#0F2A52]">
-                          <div className="flex flex-col">
-                            <span>{c.name}</span>
-                            <span className="text-xs font-normal text-[#54637D]">{c.email}</span>
-                          </div>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {filterBySearch(data.creators || [], ['name', 'email', 'niche', 'bio']).map((c: any) => (
+                      <tr key={c.id} className="transition-colors hover:bg-soft-2/60">
+                        <td className="px-4 py-3.5">
+                          <p className="font-semibold text-foreground">{c.name}</p>
+                          <p className="text-xs text-muted-2">{c.email}</p>
                         </td>
-                        <td className="py-4 px-4">
-                          <span className="inline-block px-2.5 py-1 bg-[#EEF4FB] border border-[#22D3EE] text-[#2563EB] font-semibold text-xs rounded-full">
+                        <td className="px-4 py-3.5">
+                          <span className="rounded-full border border-border bg-soft-2 px-2.5 py-1 text-xs font-semibold text-muted">
                             {c.niche}
                           </span>
                         </td>
-                        <td className="py-4 px-4 font-extrabold text-[#0F2A52]">
+                        <td className="px-4 py-3.5 font-bold text-foreground">
                           {Number(c.subscriber_count).toLocaleString()}
                         </td>
-                        <td className="py-4 px-4">
-                          <a
-                            href={c.channel_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[#2563EB] hover:text-[#22D3EE] font-semibold underline flex items-center gap-1 max-w-[200px] truncate text-xs"
-                          >
-                            <span className="truncate">{c.channel_url}</span>
-                            <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                          </a>
+                        <td className="px-4 py-3.5">
+                          {c.emailVerified ? (
+                            <CheckCircle2 className="h-4 w-4 text-accent" />
+                          ) : (
+                            <X className="h-4 w-4 text-muted-2" />
+                          )}
                         </td>
-                        <td className="py-4 px-4 text-xs text-[#54637D]">
+                        <td className="px-4 py-3.5 text-xs text-muted">
                           {new Date(c.created_at).toLocaleDateString()}
                         </td>
-                        <td className="py-4 px-4 text-right">
+                        <td className="px-4 py-3.5 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => setSelectedCreator(c)}
-                              className="px-3 py-1.5 bg-[#EEF4FB] hover:bg-sky-200 text-[#2563EB] text-xs font-bold rounded-md border border-[#22D3EE] transition-colors"
+                              className="rounded-lg border border-border bg-soft-2 px-3 py-1.5 text-xs font-bold text-foreground transition-colors hover:border-accent/40"
                             >
-                              View Bio
+                              View bio
                             </button>
                             <a
-                              href={`mailto:${c.email}?subject=DealLink%20Brand%20Sponsorship%20Inquiry`}
-                              className="px-3 py-1.5 bg-[#2563EB] hover:bg-[#22D3EE] text-white text-xs font-bold rounded-md transition-colors inline-flex items-center gap-1"
+                              href={`mailto:${c.email}?subject=DealLink%20Sponsorship%20Opportunity`}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-primary-2 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-primary"
                             >
-                              <Mail className="w-3 h-3" />
-                              <span>Contact</span>
+                              <Mail className="h-3 w-3" />
+                              Contact
                             </a>
                           </div>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Tab Content 2: Business Leads */}
-        {activeTab === 'leads' && (
-          <div className="deal-card bg-white border border-[#DCE5F3] overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead className="bg-[#0B1F3A] text-white uppercase text-[11px] tracking-wider">
-                  <tr>
-                    <th className="py-3.5 px-4 font-bold">Contact & Company</th>
-                    <th className="py-3.5 px-4 font-bold">Website</th>
-                    <th className="py-3.5 px-4 font-bold">What they want to promote</th>
-                    <th className="py-3.5 px-4 font-bold">Submitted Date</th>
-                    <th className="py-3.5 px-4 font-bold text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#DCE5F3]">
-                  {filteredLeads.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-[#54637D]">
-                        No business leads submitted yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredLeads.map((l: any) => (
-                      <tr key={l.id} className="hover:bg-[#EEF4FB]/40 transition-colors">
-                        <td className="py-4 px-4 font-bold text-[#0F2A52]">
-                          <div className="flex flex-col">
-                            <span className="text-base text-[#0F2A52]">{l.company}</span>
-                            <span className="text-xs text-[#54637D] font-normal">{l.name} ({l.email})</span>
-                          </div>
+                    ))}
+                    {filterBySearch(data.creators || [], ['name', 'email', 'niche', 'bio']).length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-10 text-center text-sm text-muted">
+                          No creators found.
                         </td>
-                        <td className="py-4 px-4">
-                          {l.website ? (
-                            <a
-                              href={l.website.startsWith('http') ? l.website : `https://${l.website}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[#2563EB] hover:text-[#22D3EE] font-semibold underline text-xs flex items-center gap-1"
-                            >
-                              <span>{l.website}</span>
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* BUSINESSES */}
+          {!dataLoading && activeTab === 'businesses' && (
+            <div className="dl-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-primary text-white uppercase text-[11px] tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3.5 font-bold">Business</th>
+                      <th className="px-4 py-3.5 font-bold">Contact</th>
+                      <th className="px-4 py-3.5 font-bold">Verified</th>
+                      <th className="px-4 py-3.5 font-bold">Joined</th>
+                      <th className="px-4 py-3.5 text-right font-bold">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {filterBySearch(data.businesses || [], ['name', 'company', 'email']).map((b: any) => (
+                      <tr key={b.id} className="transition-colors hover:bg-soft-2/60">
+                        <td className="px-4 py-3.5">
+                          <p className="font-semibold text-foreground">{b.company}</p>
+                          <p className="text-xs text-muted-2">{b.name}</p>
+                        </td>
+                        <td className="px-4 py-3.5 text-xs text-muted">{b.email}</td>
+                        <td className="px-4 py-3.5">
+                          {b.emailVerified ? (
+                            <CheckCircle2 className="h-4 w-4 text-accent" />
                           ) : (
-                            <span className="text-xs text-gray-400">N/A</span>
+                            <X className="h-4 w-4 text-muted-2" />
                           )}
                         </td>
-                        <td className="py-4 px-4 text-xs text-[#0F1B33] max-w-xs leading-relaxed">
-                          {l.promotion_needs}
+                        <td className="px-4 py-3.5 text-xs text-muted">
+                          {new Date(b.created_at).toLocaleDateString()}
                         </td>
-                        <td className="py-4 px-4 text-xs text-[#54637D]">
-                          {new Date(l.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="py-4 px-4 text-right">
+                        <td className="px-4 py-3.5 text-right">
                           <a
-                            href={`mailto:${l.email}?subject=DealLink%20-%20Creator%20Match%20for%20${encodeURIComponent(l.company)}`}
-                            className="px-3.5 py-1.5 bg-[#0B1F3A] hover:bg-[#0F2A52] text-white text-xs font-bold rounded-md transition-colors inline-flex items-center gap-1"
+                            href={`mailto:${b.email}?subject=DealLink`}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary-2 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-primary"
                           >
-                            <Mail className="w-3 h-3 text-[#22D3EE]" />
-                            <span>Reply to Lead</span>
+                            <Mail className="h-3 w-3" />
+                            Contact
                           </a>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ))}
+                    {filterBySearch(data.businesses || [], ['name', 'company', 'email']).length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-10 text-center text-sm text-muted">
+                          No approved businesses yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Tab Content 3: Business Applications */}
-        {activeTab === 'applications' && (
-          <div className="deal-card bg-white border border-[#DCE5F3] overflow-hidden">
-            {appsMessage && (
-              <div className="m-4 rounded-lg border border-[#2563EB]/30 bg-[#2563EB]/5 p-3.5 text-sm font-medium text-[#2563EB]">
-                {appsMessage}
-              </div>
-            )}
-            {appsLoading ? (
-              <div className="py-16 text-center text-sm text-[#54637D]">Loading applications...</div>
-            ) : applications.length === 0 ? (
-              <div className="py-16 text-center text-sm text-[#54637D]">
-                No business applications yet.
-              </div>
-            ) : (
-              <div className="divide-y divide-[#DCE5F3]">
-                {applications.map((a: any) => (
-                  <div key={a.id} className="p-5">
+          {/* APPLICATIONS */}
+          {!dataLoading && activeTab === 'applications' && (
+            <div className="space-y-4">
+              {(data.applications || []).length === 0 ? (
+                <div className="dl-card p-12 text-center text-sm text-muted">
+                  No business applications yet.
+                </div>
+              ) : (
+                data.applications.map((a: any, i: number) => (
+                  <motion.div
+                    key={a.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: EASE, delay: i * 0.04 }}
+                    className="dl-card p-6"
+                  >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0 space-y-1.5">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-base font-bold text-[#0F2A52]">{a.company}</span>
+                          <span className="text-base font-bold text-foreground">{a.company}</span>
                           <span
                             className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold capitalize ${
                               a.status === 'pending'
-                                ? 'border-orange-300 bg-orange-50 text-orange-600'
+                                ? 'border-warning/30 bg-warning/10 text-warning'
                                 : a.status === 'approved'
-                                ? 'border-[#2563EB]/30 bg-[#2563EB]/5 text-[#2563EB]'
-                                : 'border-red-300 bg-red-50 text-red-600'
+                                ? 'border-accent/30 bg-accent/10 text-accent'
+                                : 'border-danger/30 bg-danger/10 text-danger'
                             }`}
                           >
                             {a.status}
                           </span>
                         </div>
-                        <p className="text-xs text-[#54637D]">
+                        <p className="text-xs text-muted-2">
                           {a.contactName} · {a.email}
                           {a.website ? (
                             <>
@@ -552,119 +548,294 @@ export default function AdminPage() {
                                 href={a.website.startsWith('http') ? a.website : `https://${a.website}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-[#2563EB] underline"
+                                className="text-accent underline"
                               >
                                 {a.website}
                               </a>
                             </>
                           ) : null}
                         </p>
-                        <p className="text-xs text-[#54637D]">
-                          <strong>Budget:</strong> {a.budgetRange} · <strong>Timeline:</strong> {a.timeline}
+                        <p className="text-xs text-muted">
+                          <strong>Budget:</strong> {a.budgetRange} · <strong>Timeline:</strong>{' '}
+                          {a.timeline}
                         </p>
-                        <p className="max-w-2xl text-sm leading-relaxed text-[#0F1B33]">{a.goals}</p>
-                        <p className="text-[11px] text-[#54637D]">
+                        <p className="max-w-2xl text-sm leading-relaxed text-muted">{a.goals}</p>
+                        <p className="text-[11px] text-muted-2">
                           Submitted {new Date(a.created_at).toLocaleDateString()}
                         </p>
                       </div>
 
-                      {a.status === 'pending' ? (
+                      {a.status === 'pending' && (
                         <div className="flex shrink-0 items-center gap-2">
                           <button
                             onClick={() => handleApplicationAction(a.id, 'approve')}
-                            disabled={appsActionLoading === a.id}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563EB] px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-[#0F2A52] disabled:opacity-50"
+                            disabled={actionId === a.id}
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-primary-2 px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-primary disabled:opacity-50"
                           >
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                            {appsActionLoading === a.id ? 'Working...' : 'Approve'}
+                            {actionId === a.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                            )}
+                            Approve
                           </button>
                           <button
                             onClick={() => handleApplicationAction(a.id, 'reject')}
-                            disabled={appsActionLoading === a.id}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-600 transition-colors hover:bg-red-100 disabled:opacity-50"
+                            disabled={actionId === a.id}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-danger/25 bg-danger/5 px-4 py-2.5 text-xs font-bold text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
                           >
                             <X className="h-3.5 w-3.5" />
                             Reject
                           </button>
                         </div>
-                      ) : null}
+                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+                  </motion.div>
+                ))
+              )}
+            </div>
+          )}
 
-        {/* Creator Detail Modal */}
-        {selectedCreator && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl max-w-xl w-full border border-[#DCE5F3] overflow-hidden shadow-xl animate-in fade-in zoom-in-95">
-              <div className="bg-[#0F2A52] text-white p-6 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">{selectedCreator.name}</h3>
-                  <p className="text-xs text-sky-200">{selectedCreator.email}</p>
+          {/* BRIEFS */}
+          {!dataLoading && activeTab === 'briefs' && (
+            <div className="space-y-4">
+              {(data.briefs || []).length === 0 ? (
+                <div className="dl-card p-12 text-center text-sm text-muted">
+                  No campaign briefs yet.
                 </div>
-                <button
-                  onClick={() => setSelectedCreator(null)}
-                  className="p-2 text-sky-200 hover:text-white rounded-lg"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="p-6 space-y-4 text-sm text-[#0F1B33]">
-                <div className="flex items-center justify-between border-b border-[#DCE5F3] pb-3">
-                  <div>
-                    <span className="text-xs font-bold text-[#54637D] uppercase tracking-wider">Followers / Audience</span>
-                    <p className="text-xl font-extrabold text-[#0F2A52]">{Number(selectedCreator.subscriber_count).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-[#54637D] uppercase tracking-wider">Niche</span>
-                    <p className="px-2.5 py-1 bg-[#EEF4FB] text-[#2563EB] font-bold text-xs rounded-full border border-[#22D3EE]">
-                      {selectedCreator.niche}
-                    </p>
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-xs font-bold text-[#54637D] uppercase tracking-wider block mb-1">Channel / Profile Link</span>
-                  <a
-                    href={selectedCreator.channel_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#2563EB] hover:underline font-semibold flex items-center gap-1"
+              ) : (
+                data.briefs.map((b: any, i: number) => (
+                  <motion.div
+                    key={b.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: EASE, delay: i * 0.04 }}
+                    className="dl-card p-6"
                   >
-                    <span>{selectedCreator.channel_url}</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </div>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-base font-bold text-foreground">{b.product}</p>
+                        <p className="mt-0.5 text-xs text-muted-2">
+                          {b.company} · {b.niche} · {b.budget} · {b.deliverables}
+                        </p>
+                        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+                          {b.description}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 flex-col items-start gap-2">
+                        <span
+                          className={`rounded-full border px-2.5 py-1 text-[11px] font-bold capitalize ${
+                            b.status === 'matched'
+                              ? 'border-accent/30 bg-accent/10 text-accent'
+                              : b.status === 'reviewing'
+                              ? 'border-warning/30 bg-warning/10 text-warning'
+                              : 'border-border bg-soft-2 text-muted-2'
+                          }`}
+                        >
+                          {b.status}
+                        </span>
+                        <select
+                          value={b.status}
+                          onChange={(e) => handleBriefStatus(b.id, e.target.value)}
+                          disabled={actionId === b.id}
+                          className="rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-semibold text-foreground focus:border-accent/50 focus:outline-none disabled:opacity-50"
+                        >
+                          {BRIEF_STATUSES.map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          )}
 
-                <div>
-                  <span className="text-xs font-bold text-[#54637D] uppercase tracking-wider block mb-1">Creator Bio</span>
-                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs leading-relaxed text-[#0F1B33]">
-                    {selectedCreator.bio || <span className="italic text-gray-400">No bio specified.</span>}
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-[#DCE5F3] flex items-center justify-between">
-                  <span className="text-xs text-[#54637D]">Sign-Up ID: {selectedCreator.id}</span>
-                  <a
-                    href={`mailto:${selectedCreator.email}?subject=DealLink%20Sponsorship%20Opportunity`}
-                    className="px-5 py-2 bg-[#2563EB] hover:bg-[#22D3EE] text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1.5"
-                  >
-                    <Mail className="w-3.5 h-3.5" />
-                    <span>Send Mailto Message</span>
-                  </a>
-                </div>
+          {/* DEALS */}
+          {!dataLoading && activeTab === 'deals' && (
+            <div className="dl-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-primary text-white uppercase text-[11px] tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3.5 font-bold">Product</th>
+                      <th className="px-4 py-3.5 font-bold">Business</th>
+                      <th className="px-4 py-3.5 font-bold">Creator</th>
+                      <th className="px-4 py-3.5 font-bold">Value</th>
+                      <th className="px-4 py-3.5 font-bold">Status</th>
+                      <th className="px-4 py-3.5 font-bold">Created</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {(data.deals || []).map((d: any) => (
+                      <tr key={d.id} className="transition-colors hover:bg-soft-2/60">
+                        <td className="px-4 py-3.5 font-semibold text-foreground">{d.product}</td>
+                        <td className="px-4 py-3.5 text-muted">{d.company}</td>
+                        <td className="px-4 py-3.5 text-muted">{d.creatorName}</td>
+                        <td className="px-4 py-3.5 font-bold text-foreground">
+                          {d.dealValue ? `$${Number(d.dealValue).toLocaleString()}` : 'TBD'}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span
+                            className={`rounded-full border px-2.5 py-1 text-[11px] font-bold capitalize ${
+                              DEAL_BADGES[d.status] || DEAL_BADGES.proposed
+                            }`}
+                          >
+                            {d.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 text-xs text-muted">
+                          {new Date(d.created_at).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                    {(data.deals || []).length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-10 text-center text-sm text-muted">
+                          No deals yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
+          {/* LEADS */}
+          {!dataLoading && activeTab === 'leads' && (
+            <div className="dl-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-primary text-white uppercase text-[11px] tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3.5 font-bold">Company</th>
+                      <th className="px-4 py-3.5 font-bold">Contact</th>
+                      <th className="px-4 py-3.5 font-bold">What they want</th>
+                      <th className="px-4 py-3.5 font-bold">Date</th>
+                      <th className="px-4 py-3.5 text-right font-bold">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {filterBySearch(data.leads || [], ['name', 'company', 'email', 'promotion_needs']).map((l: any) => (
+                      <tr key={l.id} className="transition-colors hover:bg-soft-2/60">
+                        <td className="px-4 py-3.5">
+                          <p className="font-semibold text-foreground">{l.company}</p>
+                          <p className="text-xs text-muted-2">{l.name}</p>
+                        </td>
+                        <td className="px-4 py-3.5 text-xs text-muted">{l.email}</td>
+                        <td className="max-w-xs px-4 py-3.5 text-xs leading-relaxed text-muted">
+                          {l.promotion_needs}
+                        </td>
+                        <td className="px-4 py-3.5 text-xs text-muted">
+                          {new Date(l.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3.5 text-right">
+                          <a
+                            href={`mailto:${l.email}?subject=DealLink`}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary-2 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-primary"
+                          >
+                            <Mail className="h-3 w-3" />
+                            Reply
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                    {filterBySearch(data.leads || [], ['name', 'company', 'email', 'promotion_needs']).length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-10 text-center text-sm text-muted">
+                          No leads yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
 
       <Footer />
+
+      {/* Creator bio modal */}
+      {selectedCreator && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-surface shadow-high"
+          >
+            <div className="flex items-center justify-between bg-primary p-6 text-white">
+              <div>
+                <h3 className="text-lg font-semibold">{selectedCreator.name}</h3>
+                <p className="text-xs text-white/60">{selectedCreator.email}</p>
+              </div>
+              <button
+                onClick={() => setSelectedCreator(null)}
+                className="rounded-lg p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-4 p-6 text-sm">
+              <div className="flex items-center justify-between border-b border-border pb-4">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-2">
+                    Audience
+                  </span>
+                  <p className="text-xl font-bold text-foreground">
+                    {Number(selectedCreator.subscriber_count).toLocaleString()}
+                  </p>
+                </div>
+                <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-bold text-accent">
+                  {selectedCreator.niche}
+                </span>
+              </div>
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-2">
+                  Channel
+                </span>
+                <div className="mt-1">
+                  {selectedCreator.channel_url ? (
+                    <a
+                      href={selectedCreator.channel_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 font-semibold text-accent hover:text-foreground"
+                    >
+                      <span className="truncate">{selectedCreator.channel_url}</span>
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                    </a>
+                  ) : (
+                    <span className="text-muted-2">No channel linked.</span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-2">
+                  Bio
+                </span>
+                <p className="mt-1 rounded-xl bg-soft-2 p-3.5 text-xs leading-relaxed text-muted">
+                  {selectedCreator.bio || 'No bio provided.'}
+                </p>
+              </div>
+              <div className="flex items-center justify-end border-t border-border pt-4">
+                <a
+                  href={`mailto:${selectedCreator.email}?subject=DealLink%20Sponsorship%20Opportunity`}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-primary-2 px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-primary"
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  Email creator
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
