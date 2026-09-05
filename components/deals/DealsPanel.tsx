@@ -33,12 +33,13 @@ type Deal = {
   created_at: string;
 };
 
-const STAGES = ['proposed', 'active', 'completed', 'paid'];
+const STAGES = ['proposed', 'admin_approved', 'active', 'completed', 'paid'];
 
 const STATUS_BADGES: Record<string, { label: string; cls: string }> = {
-  proposed: { label: 'Proposed', cls: 'border-accent/30 bg-accent/10 text-accent' },
-  active: { label: 'Active', cls: 'border-primary-2/30 bg-primary-2/10 text-primary-2' },
-  completed: { label: 'Completed', cls: 'border-warning/30 bg-warning/10 text-warning' },
+  proposed: { label: 'Pending Admin Review', cls: 'border-warning/30 bg-warning/10 text-warning' },
+  admin_approved: { label: 'Approved by Agency', cls: 'border-accent/30 bg-accent/10 text-accent' },
+  active: { label: 'Active (Filming)', cls: 'border-primary-2/30 bg-primary-2/10 text-primary-2' },
+  completed: { label: 'Content Delivered', cls: 'border-c-finance/30 bg-c-finance/10 text-c-finance' },
   paid: { label: 'Paid', cls: 'border-success/30 bg-success/10 text-success' },
   cancelled: { label: 'Cancelled', cls: 'border-border bg-soft-2 text-muted-2' },
 };

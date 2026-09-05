@@ -4,7 +4,7 @@ import { dbConnect, User, CampaignBrief } from '@/lib/mongo';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -13,8 +13,38 @@ export async function GET() {
 
     await dbConnect();
     const user = await User.findById(session.user.id);
-    if (!user || user.role !== 'business') {
-      return NextResponse.json({ error: 'Business account required.' }, { status: 403 });
+    if (!user) {
+      return NextResponse.json({ error: 'User not found.' }, { status: 404 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const q = searchParams.get('q') || '';
+    const niche = searchParams.get('niche') || '';
+
+    if (user.role === 'creator') {
+      const filter: any = {};
+      if (niche && niche !== 'All niches') filter.niche = niche;
+      if (q) filter.product = { $regex: q, $options: 'i' };
+
+      const briefs = await CampaignBrief.find(filter)
+        .sort({ createdAt: -1 })
+        .lean();
+
+      return NextResponse.json({
+        briefs: briefs.map((b: any) => ({
+          id: b._id.toString(),
+          company: b.company,
+          businessName: b.businessName,
+          product: b.product,
+          niche: b.niche,
+          minAudience: b.minAudience,
+          budget: b.budget,
+          deliverables: b.deliverables,
+          description: b.description,
+          status: b.status,
+          created_at: b.createdAt,
+        })),
+      });
     }
 
     const briefs = await CampaignBrief.find({ businessId: user._id.toString() })

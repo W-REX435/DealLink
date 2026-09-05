@@ -20,6 +20,7 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  X,
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
@@ -65,7 +66,7 @@ export default function BusinessDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any | null>(null);
-  const [tab, setTab] = useState<'overview' | 'browse' | 'briefs' | 'deals'>('overview');
+  const [tab, setTab] = useState<'browse' | 'briefs' | 'deals' | 'overview'>('browse');
 
   const [creators, setCreators] = useState<any[]>([]);
   const [creatorsTotal, setCreatorsTotal] = useState(0);
@@ -73,6 +74,18 @@ export default function BusinessDashboard() {
   const [niche, setNiche] = useState('All niches');
   const [briefs, setBriefs] = useState<any[]>([]);
   const [briefsLoading, setBriefsLoading] = useState(false);
+
+  // Direct creator request modal state
+  const [selectedCreator, setSelectedCreator] = useState<any | null>(null);
+  const [hireForm, setHireForm] = useState({
+    product: '',
+    budget: BUDGETS[2],
+    deliverables: DELIVERABLES[0],
+    notes: '',
+  });
+  const [hireSubmitting, setHireSubmitting] = useState(false);
+  const [hireError, setHireError] = useState('');
+  const [hireSuccess, setHireSuccess] = useState('');
 
   const [briefForm, setBriefForm] = useState({
     product: '',
@@ -164,6 +177,42 @@ export default function BusinessDashboard() {
       setBriefError(err.message);
     } finally {
       setBriefSubmitting(false);
+    }
+  };
+
+  const handleHireSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCreator) return;
+    setHireSubmitting(true);
+    setHireError('');
+    setHireSuccess('');
+
+    try {
+      const res = await fetch('/api/deals/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          creatorId: selectedCreator.id,
+          product: hireForm.product,
+          budget: hireForm.budget,
+          deliverables: hireForm.deliverables,
+          notes: hireForm.notes,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to submit request.');
+
+      track('creator_requested');
+      setHireSuccess(`Deal request for ${selectedCreator.name} submitted to DealLink Admin!`);
+      setTimeout(() => {
+        setHireSuccess('');
+        setSelectedCreator(null);
+        setTab('deals');
+      }, 1500);
+    } catch (err: any) {
+      setHireError(err.message);
+    } finally {
+      setHireSubmitting(false);
     }
   };
 
@@ -346,6 +395,16 @@ export default function BusinessDashboard() {
                         </a>
                       )}
                     </div>
+                    <button
+                      onClick={() => {
+                        setSelectedCreator(c);
+                        setHireForm((f) => ({ ...f, product: user?.company || '' }));
+                      }}
+                      className="btn-primary mt-4 w-full py-2.5 text-xs"
+                    >
+                      <Handshake className="h-3.5 w-3.5" />
+                      Request Deal for $X
+                    </button>
                   </motion.div>
                 ))}
                 {creators.length === 0 && (
@@ -356,6 +415,124 @@ export default function BusinessDashboard() {
               </div>
             </div>
           )}
+
+          {/* HIRE CREATOR MODAL */}
+          <AnimatePresence>
+            {selectedCreator && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="dl-card w-full max-w-lg p-6 sm:p-7 bg-surface shadow-2xl relative border border-border"
+                >
+                  <button
+                    onClick={() => setSelectedCreator(null)}
+                    className="absolute right-4 top-4 text-muted-2 hover:text-foreground"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+
+                  <h3 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                    <Handshake className="h-5 w-5 text-accent" />
+                    Request {selectedCreator.name}
+                  </h3>
+                  <p className="mt-1 text-xs text-muted">
+                    Submit your deal proposal to DealLink Agency. We review, price, approve, and contact the creator.
+                  </p>
+
+                  {hireSuccess && (
+                    <div className="mt-4 flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 p-3.5 text-sm font-medium text-accent">
+                      <CheckCircle2 className="h-4 w-4" />
+                      {hireSuccess}
+                    </div>
+                  )}
+
+                  {hireError && (
+                    <div className="mt-4 flex items-center gap-2 rounded-xl border border-danger/25 bg-danger/5 p-3.5 text-sm font-medium text-danger">
+                      <AlertCircle className="h-4 w-4" />
+                      {hireError}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleHireSubmit} className="mt-5 space-y-4">
+                    <div>
+                      <label className="dl-label">Product / Campaign Name</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Acme SaaS Promotion"
+                        value={hireForm.product}
+                        onChange={(e) => setHireForm({ ...hireForm, product: e.target.value })}
+                        className="dl-input"
+                      />
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="dl-label">Offered Budget Range</label>
+                        <select
+                          value={hireForm.budget}
+                          onChange={(e) => setHireForm({ ...hireForm, budget: e.target.value })}
+                          className="dl-input appearance-none"
+                        >
+                          {BUDGETS.map((b) => (
+                            <option key={b} value={b}>
+                              {b}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="dl-label">Deliverables</label>
+                        <select
+                          value={hireForm.deliverables}
+                          onChange={(e) => setHireForm({ ...hireForm, deliverables: e.target.value })}
+                          className="dl-input appearance-none"
+                        >
+                          {DELIVERABLES.map((d) => (
+                            <option key={d} value={d}>
+                              {d}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="dl-label">Requirements & Notes for Admin / Creator</label>
+                      <textarea
+                        rows={3}
+                        placeholder="Specific details about your campaign, target date, or video requirements..."
+                        value={hireForm.notes}
+                        onChange={(e) => setHireForm({ ...hireForm, notes: e.target.value })}
+                        className="dl-input resize-none"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={hireSubmitting}
+                      className="btn-primary w-full py-3.5"
+                    >
+                      {hireSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4" />
+                          Submit Proposal to Admin
+                        </>
+                      )}
+                    </button>
+                  </form>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
 
           {/* BRIEFS */}
           {tab === 'briefs' && (

@@ -156,6 +156,35 @@ export default function AdminPage() {
     }
   };
 
+  const handleAdminDealAction = async (
+    targetType: 'deal' | 'match',
+    targetId: string,
+    action: string,
+    dealValue?: number
+  ) => {
+    setActionId(targetId);
+    setActionMessage('');
+    try {
+      const res = await fetch('/api/admin/deals/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetType, targetId, action, dealValue }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Admin action failed.');
+      setActionMessage(
+        action === 'approve_and_start' || action === 'approve_and_create_deal'
+          ? `Deal approved & priced at $${dealValue || 0}! Creator notified to start filming.`
+          : 'Status updated.'
+      );
+      fetchData();
+    } catch (err: any) {
+      setActionMessage(err.message || 'Action failed.');
+    } finally {
+      setActionId(null);
+    }
+  };
+
   const filterBySearch = (items: any[], fields: string[]) => {
     const q = searchQuery.toLowerCase();
     if (!q) return items;
@@ -662,22 +691,35 @@ export default function AdminPage() {
                 <table className="w-full text-left text-sm">
                   <thead className="bg-primary text-white uppercase text-[11px] tracking-wider">
                     <tr>
-                      <th className="px-4 py-3.5 font-bold">Product</th>
+                      <th className="px-4 py-3.5 font-bold">Product & Details</th>
                       <th className="px-4 py-3.5 font-bold">Business</th>
                       <th className="px-4 py-3.5 font-bold">Creator</th>
-                      <th className="px-4 py-3.5 font-bold">Value</th>
+                      <th className="px-4 py-3.5 font-bold">Offered / Agency Price</th>
                       <th className="px-4 py-3.5 font-bold">Status</th>
-                      <th className="px-4 py-3.5 font-bold">Created</th>
+                      <th className="px-4 py-3.5 text-right font-bold">Agency Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
                     {(data.deals || []).map((d: any) => (
                       <tr key={d.id} className="transition-colors hover:bg-soft-2/60">
-                        <td className="px-4 py-3.5 font-semibold text-foreground">{d.product}</td>
-                        <td className="px-4 py-3.5 text-muted">{d.company}</td>
-                        <td className="px-4 py-3.5 text-muted">{d.creatorName}</td>
-                        <td className="px-4 py-3.5 font-bold text-foreground">
-                          {d.dealValue ? `$${Number(d.dealValue).toLocaleString()}` : 'TBD'}
+                        <td className="px-4 py-3.5">
+                          <p className="font-bold text-foreground">{d.product}</p>
+                          <p className="text-xs text-muted-2">{d.deliverables}</p>
+                          {d.notes && <p className="mt-1 text-xs text-muted italic">"{d.notes}"</p>}
+                        </td>
+                        <td className="px-4 py-3.5 text-muted">
+                          <p className="font-semibold text-foreground">{d.company}</p>
+                          <p className="text-xs text-muted-2">{d.businessEmail}</p>
+                        </td>
+                        <td className="px-4 py-3.5 text-muted">
+                          <p className="font-semibold text-foreground">{d.creatorName}</p>
+                          <p className="text-xs text-muted-2">{d.creatorEmail}</p>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <p className="text-xs text-muted-2">Offered: {d.budget || d.proposedBudget || 'N/A'}</p>
+                          <p className="font-bold text-foreground">
+                            Agency Price: {d.dealValue ? `$${Number(d.dealValue).toLocaleString()}` : 'TBD'}
+                          </p>
                         </td>
                         <td className="px-4 py-3.5">
                           <span
@@ -685,11 +727,47 @@ export default function AdminPage() {
                               DEAL_BADGES[d.status] || DEAL_BADGES.proposed
                             }`}
                           >
-                            {d.status}
+                            {d.status === 'proposed' ? 'Pending Agency Approval' : d.status}
                           </span>
                         </td>
-                        <td className="px-4 py-3.5 text-xs text-muted">
-                          {new Date(d.created_at).toLocaleDateString()}
+                        <td className="px-4 py-3.5 text-right">
+                          {d.status === 'proposed' && (
+                            <div className="flex items-center justify-end gap-2">
+                              <input
+                                type="number"
+                                id={`price-${d.id}`}
+                                placeholder="Price $"
+                                defaultValue={d.dealValue || 1500}
+                                className="w-24 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-semibold text-foreground"
+                              />
+                              <button
+                                onClick={() => {
+                                  const input = document.getElementById(`price-${d.id}`) as HTMLInputElement;
+                                  const price = input ? Number(input.value) : 1500;
+                                  handleAdminDealAction('deal', d.id, 'approve_and_start', price);
+                                }}
+                                disabled={actionId === d.id}
+                                className="btn-primary py-1.5 px-3 text-xs"
+                              >
+                                Approve & Start Filming
+                              </button>
+                            </div>
+                          )}
+                          {d.status === 'active' && (
+                            <span className="text-xs font-semibold text-primary-2">
+                              Filming in Progress
+                            </span>
+                          )}
+                          {d.status === 'completed' && (
+                            <span className="text-xs font-semibold text-warning">
+                              Awaiting Business Payout
+                            </span>
+                          )}
+                          {d.status === 'paid' && (
+                            <span className="text-xs font-semibold text-success">
+                              Paid & Completed
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}

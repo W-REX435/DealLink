@@ -206,6 +206,7 @@ export const CampaignBrief =
 /* ------------------------------------------------------------------ */
 
 export type MatchStatus = 'pending' | 'accepted' | 'declined';
+export type MatchSource = 'creator_applied' | 'business_requested' | 'admin_matched';
 
 export interface IMatch extends Document {
   briefId: string;
@@ -214,6 +215,9 @@ export interface IMatch extends Document {
   businessName: string;
   company: string;
   product: string;
+  pitch?: string;
+  proposedRate?: string;
+  source?: MatchSource;
   status: MatchStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -227,6 +231,13 @@ const MatchSchema = new Schema<IMatch>(
     businessName: { type: String, required: true },
     company: { type: String, required: true },
     product: { type: String, required: true },
+    pitch: { type: String, default: '' },
+    proposedRate: { type: String, default: '' },
+    source: {
+      type: String,
+      enum: ['creator_applied', 'business_requested', 'admin_matched'],
+      default: 'admin_matched',
+    },
     status: {
       type: String,
       enum: ['pending', 'accepted', 'declined'],
@@ -244,11 +255,12 @@ export const Match = models.Match || model<IMatch>('Match', MatchSchema);
 /*  Deal (sponsorship pipeline)                                        */
 /* ------------------------------------------------------------------ */
 
-export type DealStatus = 'proposed' | 'active' | 'completed' | 'paid' | 'cancelled';
+export type DealStatus = 'proposed' | 'admin_approved' | 'active' | 'completed' | 'paid' | 'cancelled';
+export type DealSource = 'direct_request' | 'brief_application';
 
 export interface IDeal extends Document {
-  briefId: string;
-  matchId: string;
+  briefId?: string;
+  matchId?: string;
   creatorId: string;
   creatorName: string;
   creatorEmail: string;
@@ -260,6 +272,9 @@ export interface IDeal extends Document {
   niche: string;
   deliverables: string;
   budget: string;
+  proposedBudget?: string;
+  notes?: string;
+  source?: DealSource;
   dealValue: number;
   paidAmount: number;
   status: DealStatus;
@@ -272,8 +287,8 @@ export interface IDeal extends Document {
 
 const DealSchema = new Schema<IDeal>(
   {
-    briefId: { type: String, required: true },
-    matchId: { type: String, required: true },
+    briefId: { type: String, default: '' },
+    matchId: { type: String, default: '' },
     creatorId: { type: String, required: true },
     creatorName: { type: String, required: true },
     creatorEmail: { type: String, required: true },
@@ -285,11 +300,18 @@ const DealSchema = new Schema<IDeal>(
     niche: { type: String, required: true },
     deliverables: { type: String, required: true },
     budget: { type: String, required: true },
+    proposedBudget: { type: String, default: '' },
+    notes: { type: String, default: '' },
+    source: {
+      type: String,
+      enum: ['direct_request', 'brief_application'],
+      default: 'direct_request',
+    },
     dealValue: { type: Number, default: 0 },
     paidAmount: { type: Number, default: 0 },
     status: {
       type: String,
-      enum: ['proposed', 'active', 'completed', 'paid', 'cancelled'],
+      enum: ['proposed', 'admin_approved', 'active', 'completed', 'paid', 'cancelled'],
       default: 'proposed',
     },
     startedAt: { type: Date },

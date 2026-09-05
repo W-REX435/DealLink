@@ -25,6 +25,7 @@ import {
   X,
   AlertCircle,
   ArrowRight,
+  Search,
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
@@ -55,7 +56,20 @@ export default function CreatorDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [creator, setCreator] = useState<any | null>(null);
-  const [tab, setTab] = useState<'overview' | 'edit' | 'matches' | 'deals'>('overview');
+  const [tab, setTab] = useState<'campaigns' | 'deals' | 'matches' | 'overview' | 'edit'>('campaigns');
+
+  // Campaign Marketplace state
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [campaignsLoading, setCampaignsLoading] = useState(false);
+  const [campaignQ, setCampaignQ] = useState('');
+  const [campaignNiche, setCampaignNiche] = useState('All niches');
+
+  // Application modal state
+  const [selectedBrief, setSelectedBrief] = useState<any | null>(null);
+  const [applyForm, setApplyForm] = useState({ pitch: '', proposedRate: '' });
+  const [applySubmitting, setApplySubmitting] = useState(false);
+  const [applyError, setApplyError] = useState('');
+  const [applySuccess, setApplySuccess] = useState('');
 
   const [isEditing, setIsEditing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
@@ -108,6 +122,25 @@ export default function CreatorDashboard() {
     fetchProfile();
   }, [fetchProfile]);
 
+  const loadCampaigns = useCallback(async () => {
+    setCampaignsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (campaignQ) params.set('q', campaignQ);
+      if (campaignNiche !== 'All niches') params.set('niche', campaignNiche);
+      const res = await fetch(`/api/business/briefs?${params.toString()}`);
+      const data = await res.json();
+      if (res.ok) setCampaigns(data.briefs || []);
+    } catch {
+    } finally {
+      setCampaignsLoading(false);
+    }
+  }, [campaignQ, campaignNiche]);
+
+  useEffect(() => {
+    if (creator && tab === 'campaigns') loadCampaigns();
+  }, [creator, tab, loadCampaigns]);
+
   const loadMatches = useCallback(async () => {
     setMatchesLoading(true);
     try {
@@ -126,6 +159,40 @@ export default function CreatorDashboard() {
   useEffect(() => {
     if (creator && tab === 'matches') loadMatches();
   }, [creator, tab, loadMatches]);
+
+  const handleApplySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBrief) return;
+    setApplySubmitting(true);
+    setApplyError('');
+    setApplySuccess('');
+
+    try {
+      const res = await fetch('/api/business/briefs/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          briefId: selectedBrief.id,
+          pitch: applyForm.pitch,
+          proposedRate: applyForm.proposedRate,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to submit application.');
+
+      track('campaign_applied');
+      setApplySuccess(`Applied to ${selectedBrief.product}! DealLink Admin will review your pitch.`);
+      setTimeout(() => {
+        setApplySuccess('');
+        setSelectedBrief(null);
+        setTab('deals');
+      }, 1500);
+    } catch (err: any) {
+      setApplyError(err.message);
+    } finally {
+      setApplySubmitting(false);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -269,10 +336,11 @@ export default function CreatorDashboard() {
           <div className="mb-8 flex flex-wrap gap-2">
             {(
               [
-                { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+                { id: 'campaigns', label: 'Browse campaigns', icon: Sparkles },
+                { id: 'deals', label: 'My deals', icon: Handshake },
+                { id: 'matches', label: `Invitations (${inbox.length})`, icon: Inbox },
+                { id: 'overview', label: 'Profile overview', icon: LayoutDashboard },
                 { id: 'edit', label: 'Edit profile', icon: Edit3 },
-                { id: 'matches', label: `Matches (${inbox.length})`, icon: Inbox },
-                { id: 'deals', label: 'Deals', icon: Handshake },
               ] as const
             ).map((t) => (
               <button
@@ -292,6 +360,191 @@ export default function CreatorDashboard() {
               </button>
             ))}
           </div>
+
+          {/* CAMPAIGN MARKETPLACE */}
+          {tab === 'campaigns' && (
+            <div>
+              <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" />
+                  <input
+                    type="text"
+                    placeholder="Search brand campaigns..."
+                    value={campaignQ}
+                    onChange={(e) => setCampaignQ(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-surface py-3 pl-11 pr-4 text-sm font-medium text-foreground shadow-soft transition-all placeholder:text-muted-2 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20"
+                  />
+                </div>
+                <select
+                  value={campaignNiche}
+                  onChange={(e) => setCampaignNiche(e.target.value)}
+                  className="rounded-xl border border-border bg-surface px-4 py-3 text-sm font-semibold text-foreground shadow-soft focus:border-accent/50 focus:outline-none"
+                >
+                  <option value="All niches">All niches</option>
+                  {NICHES.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {campaignsLoading ? (
+                <div className="flex justify-center py-16">
+                  <Loader2 className="h-6 w-6 animate-spin text-accent" />
+                </div>
+              ) : (
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {campaigns.map((b, i) => (
+                    <motion.div
+                      key={b.id}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, ease: EASE, delay: i * 0.05 }}
+                      className="dl-card flex flex-col justify-between p-5"
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="rounded-full border border-accent/30 bg-accent/10 px-2.5 py-0.5 text-[11px] font-semibold text-accent">
+                              {b.company || b.businessName}
+                            </span>
+                            <h3 className="mt-2 text-base font-bold text-foreground">
+                              {b.product}
+                            </h3>
+                          </div>
+                          <span className="shrink-0 rounded-lg border border-border bg-soft-2 px-2 py-1 text-[11px] font-semibold text-muted">
+                            {b.niche}
+                          </span>
+                        </div>
+
+                        <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-muted">
+                          {b.description}
+                        </p>
+
+                        <div className="mt-4 space-y-1.5 border-t border-border pt-4 text-xs text-muted-2">
+                          <p>
+                            Budget range: <strong className="text-foreground">{b.budget}</strong>
+                          </p>
+                          <p>
+                            Deliverables: <strong className="text-foreground">{b.deliverables}</strong>
+                          </p>
+                          {b.minAudience > 0 && (
+                            <p>
+                              Min Audience:{' '}
+                              <strong className="text-foreground">
+                                {Number(b.minAudience).toLocaleString()}
+                              </strong>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => setSelectedBrief(b)}
+                        className="btn-primary mt-5 w-full py-2.5 text-xs"
+                      >
+                        <ArrowRight className="h-3.5 w-3.5" />
+                        Apply to Campaign
+                      </button>
+                    </motion.div>
+                  ))}
+
+                  {campaigns.length === 0 && (
+                    <div className="col-span-full rounded-2xl border border-dashed border-border p-12 text-center text-sm text-muted">
+                      No active brand campaigns found matching your filter.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* APPLY TO CAMPAIGN MODAL */}
+          <AnimatePresence>
+            {selectedBrief && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="dl-card w-full max-w-lg p-6 sm:p-7 bg-surface shadow-2xl relative border border-border"
+                >
+                  <button
+                    onClick={() => setSelectedBrief(null)}
+                    className="absolute right-4 top-4 text-muted-2 hover:text-foreground"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+
+                  <h3 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-accent" />
+                    Apply to {selectedBrief.product}
+                  </h3>
+                  <p className="mt-1 text-xs text-muted">
+                    Campaign by <strong>{selectedBrief.company}</strong> · Budget: {selectedBrief.budget}
+                  </p>
+
+                  {applySuccess && (
+                    <div className="mt-4 flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 p-3.5 text-sm font-medium text-accent">
+                      <CheckCircle className="h-4 w-4" />
+                      {applySuccess}
+                    </div>
+                  )}
+
+                  {applyError && (
+                    <div className="mt-4 flex items-center gap-2 rounded-xl border border-danger/25 bg-danger/5 p-3.5 text-sm font-medium text-danger">
+                      <AlertCircle className="h-4 w-4" />
+                      {applyError}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleApplySubmit} className="mt-5 space-y-4">
+                    <div>
+                      <label className="dl-label">Your Pitch & Experience</label>
+                      <textarea
+                        rows={4}
+                        required
+                        placeholder="Why is your channel a great fit for this campaign? Mention video idea, audience alignment, or past brand results..."
+                        value={applyForm.pitch}
+                        onChange={(e) => setApplyForm({ ...applyForm, pitch: e.target.value })}
+                        className="dl-input resize-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="dl-label">Your Requested Rate ($ USD)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. $1,200"
+                        value={applyForm.proposedRate}
+                        onChange={(e) => setApplyForm({ ...applyForm, proposedRate: e.target.value })}
+                        className="dl-input"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={applySubmitting}
+                      className="btn-primary w-full py-3.5"
+                    >
+                      {applySubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Submitting application...
+                        </>
+                      ) : (
+                        <>
+                          <ArrowRight className="h-4 w-4" />
+                          Submit Campaign Application
+                        </>
+                      )}
+                    </button>
+                  </form>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
 
           {/* OVERVIEW */}
           {tab === 'overview' && (
