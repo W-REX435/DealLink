@@ -6,6 +6,10 @@ import Google from 'next-auth/providers/google';
  * NO Node-only imports here (mongoose/bcrypt live in auth.ts only).
  */
 export const authConfig = {
+  secret:
+    process.env.AUTH_SECRET ||
+    process.env.NEXTAUTH_SECRET ||
+    'deallink-auth-fallback-secret-at-least-32-chars-long',
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/creator/login',
@@ -25,6 +29,7 @@ export const authConfig = {
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = (user as any).role || 'creator';
       }
       return token;
     },

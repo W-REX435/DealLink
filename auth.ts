@@ -23,10 +23,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!user || !user.password) return null;
 
-        const valid = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        );
+        const isBcrypt =
+          typeof user.password === 'string' &&
+          (user.password.startsWith('$2a$') || user.password.startsWith('$2b$'));
+        const valid = isBcrypt
+          ? await bcrypt.compare(credentials.password as string, user.password)
+          : credentials.password === user.password;
         if (!valid) return null;
 
         return {
@@ -34,6 +36,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           email: user.email,
           image: user.image || undefined,
+          role: user.role || 'creator',
         };
       },
     }),
@@ -66,6 +69,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = (user as any).role || 'creator';
       }
       // Refresh custom profile fields from DB
       if (token.email) {
