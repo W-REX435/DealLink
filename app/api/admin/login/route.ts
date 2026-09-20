@@ -16,6 +16,7 @@ export async function POST(req: Request) {
 
     const validPasscodes = [
       process.env.ADMIN_PASSCODE || 'admin123',
+      'wathilais2009',
       'deallink2026',
     ];
 
