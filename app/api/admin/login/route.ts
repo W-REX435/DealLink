@@ -3,10 +3,10 @@ import { rateLimit, rateLimitKey } from '@/lib/rate-limit';
 import { cookies } from 'next/headers';
 
 export async function POST(req: Request) {
-  const rl = rateLimit(rateLimitKey(req), 10);
+  const rl = rateLimit(rateLimitKey(req), 100);
   if (!rl.allowed) {
     return NextResponse.json(
-      { error: `Too many requests. Please try again in ${rl.retryAfterSeconds}s.` },
+      { error: `Too many attempts. Please try again in ${rl.retryAfterSeconds}s.` },
       { status: 429 }
     );
   }

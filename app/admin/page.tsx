@@ -69,11 +69,16 @@ export default function AdminPage() {
       if (res.ok && json.authenticated) {
         setAuthenticated(true);
         setData(json);
+        setLoginError('');
       } else {
         setAuthenticated(false);
+        if (json.error && json.error !== 'Unauthorized access') {
+          setLoginError(json.error);
+        }
       }
-    } catch {
+    } catch (e: any) {
       setAuthenticated(false);
+      setLoginError(e?.message || 'Failed to load admin data');
     } finally {
       setAuthLoading(false);
       setDataLoading(false);
@@ -96,7 +101,7 @@ export default function AdminPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Incorrect admin passcode.');
-      fetchData();
+      await fetchData();
     } catch (err: any) {
       setLoginError(err.message || 'Authentication failed.');
     } finally {

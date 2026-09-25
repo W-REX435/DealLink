@@ -29,6 +29,7 @@ export async function dbConnect(): Promise<mongoose.Mongoose> {
     cached.promise = mongoose
       .connect(uri, {
         bufferCommands: false,
+        serverSelectionTimeoutMS: 5000,
       })
       .then((m) => m);
   }
