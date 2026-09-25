@@ -52,6 +52,9 @@ export async function GET(req: Request) {
         channel_url: c.channelUrl || '',
         bio: c.bio || '',
         emailVerified: Boolean(c.emailVerified),
+        profileImage: c.profileImage || '',
+        verified: Boolean(c.verified),
+        socialAccounts: c.socialAccounts || {},
         created_at: c.createdAt,
       })),
       pagination: {

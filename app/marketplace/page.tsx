@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   Search,
@@ -10,6 +11,8 @@ import {
   Youtube,
   Instagram,
   Music2,
+  Twitter,
+  Linkedin,
   Loader2,
   ArrowRight,
   Users,
@@ -44,11 +47,25 @@ const NICHE_GRADS: Record<string, string> = {
   'Other Niche': 'from-primary-2 to-accent',
 };
 
-function PlatformIcon({ url }: { url: string }) {
-  if (url.includes('instagram')) return <Instagram className="h-3 w-3" />;
-  if (url.includes('tiktok')) return <Music2 className="h-3 w-3" />;
-  if (url.includes('youtube') || url.includes('youtu.be')) return <Youtube className="h-3 w-3" />;
-  return <Users className="h-3 w-3" />;
+function SocialIcons({ socialAccounts }: { socialAccounts: Record<string, string> }) {
+  const icons: { key: string; Icon: any; color: string }[] = [
+    { key: 'youtube', Icon: Youtube, color: 'text-red-500' },
+    { key: 'instagram', Icon: Instagram, color: 'text-pink-500' },
+    { key: 'tiktok', Icon: Music2, color: 'text-foreground' },
+    { key: 'twitter', Icon: Twitter, color: 'text-sky-500' },
+    { key: 'linkedin', Icon: Linkedin, color: 'text-blue-600' },
+  ];
+  const active = icons.filter((i) => socialAccounts?.[i.key]);
+  if (!active.length) return null;
+  return (
+    <div className="mt-2 flex items-center gap-2">
+      {active.map(({ key, Icon, color }) => (
+        <span key={key} className={`${color} opacity-75`}>
+          <Icon className="h-3.5 w-3.5" />
+        </span>
+      ))}
+    </div>
+  );
 }
 
 function CreatorCardSkeleton() {
@@ -233,28 +250,46 @@ export default function Marketplace() {
                     <Link href={`/creators/${c.id}`} className="block h-full">
                       <div className="dl-card group flex h-full flex-col p-5 transition-shadow duration-300 hover:shadow-mid">
                         <div className="flex items-center gap-3.5">
-                          <div
-                            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${
-                              NICHE_GRADS[c.niche] || NICHE_GRADS['Other Niche']
-                            } text-sm font-bold text-white shadow-soft`}
-                          >
-                            {(c.name || '?')[0]}
+                          {/* Avatar — profile image or gradient initial */}
+                          <div className="relative shrink-0">
+                            {c.profileImage ? (
+                              <div className="h-12 w-12 overflow-hidden rounded-xl">
+                                <Image
+                                  src={c.profileImage}
+                                  alt={c.name}
+                                  width={48}
+                                  height={48}
+                                  className="h-full w-full object-cover"
+                                  unoptimized
+                                />
+                              </div>
+                            ) : (
+                              <div
+                                className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${
+                                  NICHE_GRADS[c.niche] || NICHE_GRADS['Other Niche']
+                                } text-sm font-bold text-white shadow-soft`}
+                              >
+                                {(c.name || '?')[0]}
+                              </div>
+                            )}
+                            {c.verified && (
+                              <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-white shadow">
+                                <BadgeCheck className="h-3 w-3" />
+                              </span>
+                            )}
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="flex items-center gap-1.5 truncate text-sm font-semibold text-foreground">
                               {c.name}
-                              {c.emailVerified && (
+                              {c.verified && (
                                 <BadgeCheck className="h-4 w-4 shrink-0 text-accent" />
                               )}
                             </p>
                             <p className="flex items-center gap-1 text-xs text-muted-2">
-                              {c.channel_url ? (
-                                <PlatformIcon url={c.channel_url} />
-                              ) : (
-                                <Users className="h-3 w-3" />
-                              )}
+                              <Users className="h-3 w-3" />
                               {Number(c.subscriber_count).toLocaleString()} audience
                             </p>
+                            <SocialIcons socialAccounts={c.socialAccounts || {}} />
                           </div>
                         </div>
                         <p className="mt-3 line-clamp-2 flex-1 text-xs leading-relaxed text-muted">

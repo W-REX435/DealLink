@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, UserCheck, ArrowRight } from 'lucide-react';
+import { Menu, X, UserCheck, ArrowRight, MessageSquare } from 'lucide-react';
 import Logo from './Logo';
 import ThemeToggle from './ui/ThemeToggle';
 import { EASE } from '@/lib/motion';
@@ -21,6 +21,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [loggedInCreator, setLoggedInCreator] = useState<string | null>(null);
   const [userRole, setUserRole] = useState('creator');
+  const [isVerified, setIsVerified] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export default function Navbar() {
         if (data.authenticated && data.creator) {
           setLoggedInCreator(data.creator.name);
           if (data.creator.role) setUserRole(data.creator.role);
+          if (data.creator.verified) setIsVerified(true);
         }
       })
       .catch(() => {});
@@ -41,7 +43,11 @@ export default function Navbar() {
   }, []);
 
   const dashboardHref =
-    userRole === 'business' ? '/business/dashboard' : '/creator/dashboard';
+    userRole === 'admin'
+      ? '/admin'
+      : userRole === 'business'
+      ? '/business/dashboard'
+      : '/creator/dashboard';
 
   return (
     <motion.header
@@ -72,13 +78,25 @@ export default function Navbar() {
         <div className="hidden items-center gap-3 lg:flex">
           <ThemeToggle />
           {mounted && loggedInCreator ? (
-            <Link
-              href={dashboardHref}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-primary-2 hover:shadow-mid"
-            >
-              <UserCheck className="h-4 w-4 text-accent-soft" />
-              <span>Dashboard</span>
-            </Link>
+            <>
+              {(isVerified || userRole === 'admin') && (
+                <Link
+                  href={userRole === 'admin' ? '/admin?tab=chat' : `${dashboardHref}?tab=chat`}
+                  className="inline-flex items-center gap-2 rounded-xl border border-border bg-soft-2 px-3 py-2 text-sm font-semibold text-foreground transition-all hover:border-accent/40 hover:text-accent"
+                  title={userRole === 'admin' ? 'Open Chat' : 'Chat with admin'}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span>Chat</span>
+                </Link>
+              )}
+              <Link
+                href={dashboardHref}
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-primary-2 hover:shadow-mid"
+              >
+                <UserCheck className="h-4 w-4 text-accent-soft" />
+                <span>Dashboard</span>
+              </Link>
+            </>
           ) : (
             <>
               <Link

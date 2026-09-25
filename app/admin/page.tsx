@@ -113,14 +113,7 @@ export default function AdminPage() {
     fetchData();
   }, [fetchData]);
 
-  useEffect(() => {
-    if (authenticated) {
-      const interval = setInterval(() => {
-        fetchData();
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [authenticated, fetchData]);
+  // Auto-refresh removed — use the manual Refresh button instead
 
   const handleMarkRead = async (id: string) => {
     try {
