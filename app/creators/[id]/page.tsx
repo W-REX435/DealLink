@@ -172,13 +172,13 @@ export default function CreatorProfile() {
                     </p>
                   </div>
                 </div>
-                <Link
-                  href="/business/apply"
+                <a
+                  href={`mailto:${creator.email}`}
                   className="btn-primary group shrink-0"
                 >
-                  Apply as a brand
+                  Contact
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </Link>
+                </a>
               </div>
             </motion.div>
           ) : null}

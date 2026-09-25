@@ -56,7 +56,7 @@ export default function CreatorDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [creator, setCreator] = useState<any | null>(null);
-  const [tab, setTab] = useState<'campaigns' | 'deals' | 'matches' | 'overview' | 'edit'>('campaigns');
+  const [tab, setTab] = useState<'campaigns' | 'deals' | 'matches' | 'overview' | 'edit' | 'chat'>('campaigns');
 
   // Campaign Marketplace state
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -83,7 +83,17 @@ export default function CreatorDashboard() {
     subscriber_count: '',
     niche: '',
     bio: '',
+    profileImage: '',
+    youtube: '',
+    instagram: '',
+    tiktok: '',
+    twitter: '',
+    linkedin: '',
   });
+
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
 
   const [inbox, setInbox] = useState<any[]>([]);
   const [decided, setDecided] = useState<any[]>([]);
@@ -110,6 +120,12 @@ export default function CreatorDashboard() {
         subscriber_count: String(data.creator.subscriber_count || 0),
         niche: data.creator.niche || NICHES[0],
         bio: data.creator.bio || '',
+        profileImage: data.creator.profileImage || '',
+        youtube: data.creator.socialAccounts?.youtube || '',
+        instagram: data.creator.socialAccounts?.instagram || '',
+        tiktok: data.creator.socialAccounts?.tiktok || '',
+        twitter: data.creator.socialAccounts?.twitter || '',
+        linkedin: data.creator.socialAccounts?.linkedin || '',
       });
     } catch {
       setError('Failed to load creator profile.');
@@ -159,6 +175,39 @@ export default function CreatorDashboard() {
   useEffect(() => {
     if (creator && tab === 'matches') loadMatches();
   }, [creator, tab, loadMatches]);
+
+  const fetchChat = useCallback(async () => {
+    if (!creator?.verified || tab !== 'chat') return;
+    try {
+      const res = await fetch('/api/chat');
+      const data = await res.json();
+      if (res.ok) setChatMessages(data.messages || []);
+    } catch (err) {}
+  }, [creator?.verified, tab]);
+
+  useEffect(() => {
+    fetchChat();
+    const interval = setInterval(fetchChat, 5000);
+    return () => clearInterval(interval);
+  }, [fetchChat]);
+
+  const handleSendChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+    setChatLoading(true);
+    try {
+      await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toUserId: 'admin', message: chatInput }),
+      });
+      setChatInput('');
+      fetchChat();
+    } catch (err) {
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   const handleApplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,6 +259,14 @@ export default function CreatorDashboard() {
           subscriber_count: Number(editForm.subscriber_count) || 0,
           niche: editForm.niche,
           bio: editForm.bio,
+          profileImage: editForm.profileImage,
+          socialAccounts: {
+            youtube: editForm.youtube,
+            instagram: editForm.instagram,
+            tiktok: editForm.tiktok,
+            twitter: editForm.twitter,
+            linkedin: editForm.linkedin,
+          }
         }),
       });
       const data = await res.json();
@@ -341,12 +398,13 @@ export default function CreatorDashboard() {
                 { id: 'matches', label: `Invitations (${inbox.length})`, icon: Inbox },
                 { id: 'overview', label: 'Profile overview', icon: LayoutDashboard },
                 { id: 'edit', label: 'Edit profile', icon: Edit3 },
+                ...(creator?.verified ? [{ id: 'chat', label: 'Chat with Admin', icon: Mail }] : []),
               ] as const
             ).map((t) => (
               <button
                 key={t.id}
                 onClick={() => {
-                  setTab(t.id);
+                  setTab(t.id as any);
                   setIsEditing(t.id === 'edit');
                 }}
                 className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
@@ -588,17 +646,28 @@ export default function CreatorDashboard() {
                 <div className="dl-card p-6">
                   <div className="flex flex-col gap-5 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3.5">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-2 to-accent text-lg font-bold text-white">
-                        {(creator?.name || '?')[0]}
+                      <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary-2 to-accent text-xl font-bold text-white shrink-0">
+                        {creator?.profileImage ? (
+                          <img src={creator.profileImage} alt={creator.name} className="h-full w-full object-cover" />
+                        ) : (
+                          (creator?.name || '?')[0]
+                        )}
                       </div>
                       <div className="min-w-0">
-                        <p className="flex items-center gap-1.5 text-lg font-semibold tracking-tight text-foreground">
-                          {creator?.name}
-                          {creator?.emailVerified && (
-                            <BadgeCheck className="h-4 w-4 text-accent" />
+                        <div className="flex items-center gap-2">
+                          <p className="flex items-center gap-1.5 text-lg font-semibold tracking-tight text-foreground">
+                            {creator?.name}
+                            {creator?.emailVerified && (
+                              <BadgeCheck className="h-4 w-4 text-accent" />
+                            )}
+                          </p>
+                          {creator?.verified ? (
+                            <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] font-bold text-green-500">Verified ✓</span>
+                          ) : (
+                            <span className="rounded-full bg-yellow-500/10 px-2 py-0.5 text-[10px] font-bold text-yellow-500">Pending verification</span>
                           )}
-                        </p>
-                        <p className="flex items-center gap-1 text-xs text-muted-2">
+                        </div>
+                        <p className="flex items-center gap-1 text-xs text-muted-2 mt-1">
                           <Mail className="h-3 w-3" />
                           {creator?.email}
                         </p>
@@ -619,6 +688,27 @@ export default function CreatorDashboard() {
                         {creator?.bio || 'No bio yet — add one so brands understand your content.'}
                       </p>
                     </div>
+
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-2">
+                        Social Accounts
+                      </span>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {['youtube', 'instagram', 'tiktok', 'twitter', 'linkedin'].map((platform) => {
+                          const url = creator?.socialAccounts?.[platform];
+                          if (!url) return null;
+                          return (
+                            <a key={platform} href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface/50 px-3 py-1.5 text-xs font-medium capitalize text-muted hover:text-foreground">
+                              {platform}
+                            </a>
+                          )
+                        })}
+                        {!Object.values(creator?.socialAccounts || {}).some(Boolean) && (
+                          <span className="text-sm text-muted-2">No social accounts linked.</span>
+                        )}
+                      </div>
+                    </div>
+
                     <div>
                       <span className="text-xs font-bold uppercase tracking-wider text-muted-2">
                         Channel
@@ -703,6 +793,35 @@ export default function CreatorDashboard() {
                 Update profile
               </h3>
               <form onSubmit={handleSave} className="space-y-5">
+                <div className="flex flex-col items-center gap-4 sm:flex-row">
+                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary-2 to-accent text-3xl font-bold text-white shrink-0">
+                    {editForm.profileImage ? (
+                      <img src={editForm.profileImage} alt="Profile" className="h-full w-full object-cover" />
+                    ) : (
+                      (editForm.name || '?')[0]
+                    )}
+                  </div>
+                  <div>
+                    <label className="dl-label">Profile Image (Max 2MB)</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 2 * 1024 * 1024) {
+                            alert('Image must be less than 2MB');
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onloadend = () => setEditForm({ ...editForm, profileImage: reader.result as string });
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="mt-1 block text-sm text-muted-2 file:mr-4 file:rounded-full file:border-0 file:bg-accent/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-accent hover:file:bg-accent/20"
+                    />
+                  </div>
+                </div>
                 <div>
                   <label className="dl-label">Name</label>
                   <input
@@ -760,6 +879,33 @@ export default function CreatorDashboard() {
                     className="dl-input resize-none"
                   />
                 </div>
+
+                <div className="space-y-4 rounded-xl border border-border p-4 bg-surface/50">
+                  <h4 className="text-sm font-semibold text-foreground">Social Accounts (Optional)</h4>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="dl-label">YouTube</label>
+                      <input type="url" value={editForm.youtube} onChange={(e) => setEditForm({ ...editForm, youtube: e.target.value })} className="dl-input" />
+                    </div>
+                    <div>
+                      <label className="dl-label">Instagram</label>
+                      <input type="url" value={editForm.instagram} onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })} className="dl-input" />
+                    </div>
+                    <div>
+                      <label className="dl-label">TikTok</label>
+                      <input type="url" value={editForm.tiktok} onChange={(e) => setEditForm({ ...editForm, tiktok: e.target.value })} className="dl-input" />
+                    </div>
+                    <div>
+                      <label className="dl-label">Twitter / X</label>
+                      <input type="url" value={editForm.twitter} onChange={(e) => setEditForm({ ...editForm, twitter: e.target.value })} className="dl-input" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="dl-label">LinkedIn</label>
+                      <input type="url" value={editForm.linkedin} onChange={(e) => setEditForm({ ...editForm, linkedin: e.target.value })} className="dl-input" />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex items-center gap-3 pt-1">
                   <SubmitButton
                     loading={saveLoading}
@@ -898,6 +1044,46 @@ export default function CreatorDashboard() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* CHAT */}
+          {tab === 'chat' && creator?.verified && (
+            <div className="dl-card mx-auto max-w-2xl flex flex-col h-[600px]">
+              <div className="border-b border-border p-4 flex items-center gap-3">
+                <div className="h-10 w-10 bg-accent/10 rounded-full flex items-center justify-center text-accent">
+                  <UserCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Admin Support</h3>
+                  <p className="text-xs text-muted-2">Typically replies within a few hours</p>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {chatMessages.length === 0 && (
+                  <p className="text-center text-sm text-muted">No messages yet. Say hi!</p>
+                )}
+                {chatMessages.map(msg => (
+                  <div key={msg._id} className={`flex ${msg.fromUserId === 'admin' ? 'justify-start' : 'justify-end'}`}>
+                    <div className={`max-w-[70%] rounded-2xl px-4 py-2 ${msg.fromUserId === 'admin' ? 'bg-surface/80 border border-border text-foreground rounded-tl-sm' : 'bg-accent text-white rounded-tr-sm'}`}>
+                      <p className="text-sm">{msg.message}</p>
+                      <span className={`text-[10px] mt-1 block opacity-70`}>{new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <form onSubmit={handleSendChat} className="border-t border-border p-4 flex gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Type a message..."
+                  className="dl-input flex-1"
+                />
+                <button type="submit" disabled={chatLoading} className="btn-primary py-2 px-4">
+                  {chatLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send'}
+                </button>
+              </form>
             </div>
           )}
 

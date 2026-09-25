@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { rateLimit, rateLimitKey } from '@/lib/rate-limit';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
-import { dbConnect, User } from '@/lib/mongo';
+import { dbConnect, User, Notification } from '@/lib/mongo';
 import { sendVerificationEmail, isEmailConfigured } from '@/lib/email';
 
 export async function POST(req: Request) {
@@ -74,6 +74,16 @@ export async function POST(req: Request) {
       bio: (bio || '').trim(),
       emailVerificationToken: token,
       emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    });
+
+    await Notification.create({
+      type: 'new_creator',
+      message: `New creator registered: ${user.name}`,
+      fromUserId: user._id.toString(),
+      fromUserName: user.name,
+      fromUserEmail: user.email,
+      toUserId: 'admin',
+      read: false,
     });
 
     await sendVerificationEmail(user.email, user.name, token);

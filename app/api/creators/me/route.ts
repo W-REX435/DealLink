@@ -32,6 +32,9 @@ export async function GET() {
         subscriber_count: user.subscriberCount || 0,
         niche: user.niche || 'Tech & SaaS',
         bio: user.bio || '',
+        socialAccounts: user.socialAccounts || {},
+        profileImage: user.profileImage || '',
+        verified: Boolean(user.verified),
         created_at: user.createdAt,
       },
     });
@@ -74,6 +77,8 @@ export async function PUT(req: Request) {
       user.subscriberCount = Number(body.subscriber_count) || 0;
     if (body.niche !== undefined) user.niche = body.niche;
     if (body.bio !== undefined) user.bio = body.bio;
+    if (body.socialAccounts !== undefined) user.socialAccounts = body.socialAccounts;
+    if (body.profileImage !== undefined) user.profileImage = body.profileImage;
 
     await user.save();
 
@@ -88,6 +93,9 @@ export async function PUT(req: Request) {
         subscriber_count: user.subscriberCount || 0,
         niche: user.niche || 'Tech & SaaS',
         bio: user.bio || '',
+        socialAccounts: user.socialAccounts || {},
+        profileImage: user.profileImage || '',
+        verified: Boolean(user.verified),
         created_at: user.createdAt,
       },
     });

@@ -18,6 +18,8 @@ import {
   Inbox,
   Loader2,
   Sparkles,
+  Bell,
+  MessageSquare
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
@@ -54,12 +56,20 @@ export default function AdminPage() {
   });
   const [dataLoading, setDataLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<Tab>('creators');
+  const [activeTab, setActiveTab] = useState<Tab | 'chat'>('creators');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCreator, setSelectedCreator] = useState<any | null>(null);
 
   const [actionId, setActionId] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState('');
+
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatUser, setChatUser] = useState<string | null>(null);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
     setDataLoading(true);
@@ -70,6 +80,20 @@ export default function AdminPage() {
         setAuthenticated(true);
         setData(json);
         setLoginError('');
+
+        const notifRes = await fetch('/api/notifications');
+        const notifData = await notifRes.json();
+        if (notifRes.ok) {
+          setNotifications(notifData.notifications || []);
+          setUnreadNotifications(notifData.unreadCount || 0);
+        }
+
+        const chatRes = await fetch('/api/chat');
+        const chatData = await chatRes.json();
+        if (chatRes.ok) {
+          setChatMessages(chatData.messages || []);
+        }
+
       } else {
         setAuthenticated(false);
         if (json.error && json.error !== 'Unauthorized access') {
@@ -88,6 +112,58 @@ export default function AdminPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (authenticated) {
+      const interval = setInterval(() => {
+        fetchData();
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [authenticated, fetchData]);
+
+  const handleMarkRead = async (id: string) => {
+    try {
+      await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notificationId: id })
+      });
+      fetchData();
+    } catch (err) {}
+  };
+
+  const handleVerifyCreator = async (creatorId: string, action: 'verify' | 'unverify' | 'delete') => {
+    if (action === 'delete' && !window.confirm('Are you sure you want to delete this creator?')) return;
+    setActionId(creatorId);
+    try {
+      await fetch('/api/admin/creators/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ creatorId, action })
+      });
+      fetchData();
+    } catch (err) {}
+    finally { setActionId(null); }
+  };
+
+  const handleSendChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim() || !chatUser) return;
+    setChatLoading(true);
+    try {
+      await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toUserId: chatUser, message: chatInput }),
+      });
+      setChatInput('');
+      fetchData();
+    } catch (err) {
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -295,13 +371,14 @@ export default function AdminPage() {
     { label: 'Matches', value: stats.totalMatches || 0, icon: Sparkles },
   ];
 
-  const tabs: { id: Tab; label: string; count: number }[] = [
+  const tabs: { id: Tab | 'chat'; label: string; count: number }[] = [
     { id: 'creators', label: 'Creators', count: data.creators?.length || 0 },
     { id: 'businesses', label: 'Businesses', count: data.businesses?.length || 0 },
     { id: 'applications', label: 'Applications', count: (data.applications || []).filter((a: any) => a.status === 'pending').length },
     { id: 'briefs', label: 'Briefs', count: data.briefs?.length || 0 },
     { id: 'deals', label: 'Deals', count: data.deals?.length || 0 },
     { id: 'leads', label: 'Leads', count: data.leads?.length || 0 },
+    { id: 'chat', label: 'Chat', count: Array.from(new Set(chatMessages.map(m => m.fromUserId === 'admin' ? m.toUserId : m.fromUserId))).length },
   ];
 
   return (
@@ -332,14 +409,54 @@ export default function AdminPage() {
                   Creators, businesses, applications, briefs, and deals.
                 </p>
               </div>
-              <button
-                onClick={fetchData}
-                disabled={dataLoading}
-                className="inline-flex items-center gap-2 self-start rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-xs font-semibold text-white/90 backdrop-blur-sm transition-colors hover:bg-white/20"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${dataLoading ? 'animate-spin' : ''}`} />
-                Refresh
-              </button>
+              <div className="flex gap-2">
+                <div className="relative">
+                  <button
+                    onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                    className="inline-flex items-center justify-center self-start rounded-xl border border-white/15 bg-white/10 p-2.5 text-white/90 backdrop-blur-sm transition-colors hover:bg-white/20"
+                  >
+                    <Bell className="h-4 w-4" />
+                    {unreadNotifications > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-bold text-white">
+                        {unreadNotifications}
+                      </span>
+                    )}
+                  </button>
+                  
+                  {isNotificationsOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-80 rounded-xl bg-surface border border-border shadow-2xl z-50 overflow-hidden">
+                      <div className="bg-soft-2 border-b border-border p-3 text-sm font-bold text-foreground">
+                        Notifications
+                      </div>
+                      <div className="max-h-[300px] overflow-y-auto p-2">
+                        {notifications.length === 0 ? (
+                          <div className="p-4 text-center text-xs text-muted">No notifications</div>
+                        ) : (
+                          notifications.map(n => (
+                            <div key={n._id} className={`p-3 rounded-lg mb-1 flex items-start gap-3 ${n.read ? 'bg-transparent' : 'bg-accent/5'}`}>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-xs ${n.read ? 'text-muted' : 'text-foreground font-semibold'}`}>{n.message}</p>
+                                <span className="text-[10px] text-muted-2 block mt-1">{new Date(n.createdAt).toLocaleString()}</span>
+                              </div>
+                              {!n.read && (
+                                <button onClick={() => handleMarkRead(n._id)} className="text-[10px] font-bold text-accent shrink-0 mt-1">Mark read</button>
+                              )}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={fetchData}
+                  disabled={dataLoading}
+                  className="inline-flex items-center gap-2 self-start rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-xs font-semibold text-white/90 backdrop-blur-sm transition-colors hover:bg-white/20"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${dataLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </button>
+              </div>
             </div>
           </motion.div>
 
@@ -445,17 +562,40 @@ export default function AdminPage() {
                           {Number(c.subscriber_count).toLocaleString()}
                         </td>
                         <td className="px-4 py-3.5">
-                          {c.emailVerified ? (
-                            <CheckCircle2 className="h-4 w-4 text-accent" />
-                          ) : (
-                            <X className="h-4 w-4 text-muted-2" />
-                          )}
+                          <div className="flex flex-col gap-1">
+                            <span className="text-xs">Email: {c.emailVerified ? <CheckCircle2 className="inline h-3 w-3 text-accent" /> : <X className="inline h-3 w-3 text-muted-2" />}</span>
+                            <span className="text-xs">Admin: {c.verified ? <CheckCircle2 className="inline h-3 w-3 text-green-500" /> : <X className="inline h-3 w-3 text-muted-2" />}</span>
+                          </div>
                         </td>
                         <td className="px-4 py-3.5 text-xs text-muted">
                           {new Date(c.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-3.5 text-right">
                           <div className="flex items-center justify-end gap-2">
+                            {c.verified ? (
+                              <button
+                                onClick={() => handleVerifyCreator(c.id, 'unverify')}
+                                disabled={actionId === c.id}
+                                className="rounded-lg border border-border bg-soft-2 px-3 py-1.5 text-[10px] font-bold text-foreground transition-colors hover:border-accent/40"
+                              >
+                                Unverify
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleVerifyCreator(c.id, 'verify')}
+                                disabled={actionId === c.id}
+                                className="rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-1.5 text-[10px] font-bold text-green-500 transition-colors hover:bg-green-500/20"
+                              >
+                                Verify
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleVerifyCreator(c.id, 'delete')}
+                              disabled={actionId === c.id}
+                              className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-1.5 text-[10px] font-bold text-danger transition-colors hover:bg-danger/20"
+                            >
+                              Delete
+                            </button>
                             <button
                               onClick={() => setSelectedCreator(c)}
                               className="rounded-lg border border-border bg-soft-2 px-3 py-1.5 text-xs font-bold text-foreground transition-colors hover:border-accent/40"
@@ -840,6 +980,73 @@ export default function AdminPage() {
               </div>
             </div>
           )}
+          {/* CHAT */}
+          {!dataLoading && activeTab === 'chat' && (
+            <div className="dl-card flex h-[600px] overflow-hidden">
+              <div className="w-1/3 border-r border-border flex flex-col bg-surface/30">
+                <div className="p-4 border-b border-border bg-surface font-semibold text-sm">
+                  Users
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  {Array.from(new Set(chatMessages.map(m => m.fromUserId === 'admin' ? m.toUserId : m.fromUserId))).map(userId => {
+                    const userMsgs = chatMessages.filter(m => m.fromUserId === userId || m.toUserId === userId);
+                    const lastMsg = userMsgs[userMsgs.length - 1];
+                    const userName = lastMsg.fromUserId === 'admin' ? lastMsg.toUserName || 'User' : lastMsg.fromUserName;
+                    return (
+                      <button
+                        key={userId}
+                        onClick={() => setChatUser(userId as string)}
+                        className={`w-full text-left p-4 border-b border-border hover:bg-soft-2 transition-colors ${chatUser === userId ? 'bg-soft-2' : ''}`}
+                      >
+                        <p className="font-semibold text-sm text-foreground">{userName}</p>
+                        <p className="text-xs text-muted truncate mt-1">{lastMsg.message}</p>
+                      </button>
+                    );
+                  })}
+                  {chatMessages.length === 0 && (
+                    <div className="p-8 text-center text-sm text-muted">No messages yet.</div>
+                  )}
+                </div>
+              </div>
+              <div className="flex-1 flex flex-col">
+                {chatUser ? (
+                  <>
+                    <div className="p-4 border-b border-border bg-surface font-semibold text-sm flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 text-accent" />
+                      Chat with User
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                      {chatMessages.filter(m => m.fromUserId === chatUser || m.toUserId === chatUser).map(msg => (
+                        <div key={msg._id} className={`flex ${msg.fromUserId === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-[70%] rounded-2xl px-4 py-2 ${msg.fromUserId === 'admin' ? 'bg-accent text-white rounded-tr-sm' : 'bg-surface/80 border border-border text-foreground rounded-tl-sm'}`}>
+                            <p className="text-sm">{msg.message}</p>
+                            <span className={`text-[10px] mt-1 block opacity-70`}>{new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <form onSubmit={handleSendChat} className="border-t border-border p-4 flex gap-2">
+                      <input
+                        type="text"
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        placeholder="Type a message..."
+                        className="dl-input flex-1"
+                      />
+                      <button type="submit" disabled={chatLoading} className="btn-primary py-2 px-4">
+                        {chatLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send'}
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-muted text-sm">
+                    Select a user to view messages
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
         </div>
       </main>
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { dbConnect, User, BusinessLead, BusinessApplication, CampaignBrief, Deal, Match } from '@/lib/mongo';
+import { dbConnect, User, BusinessLead, BusinessApplication, CampaignBrief, Deal, Match, Notification } from '@/lib/mongo';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,13 +18,14 @@ export async function GET() {
 
     await dbConnect();
 
-    const [users, leads, applications, briefs, deals, matches] = await Promise.all([
+    const [users, leads, applications, briefs, deals, matches, unreadNotifications] = await Promise.all([
       User.find().sort({ createdAt: -1 }).lean(),
       BusinessLead.find().sort({ createdAt: -1 }).lean(),
       BusinessApplication.find().sort({ createdAt: -1 }).lean(),
       CampaignBrief.find().sort({ createdAt: -1 }).lean(),
       Deal.find().sort({ createdAt: -1 }).lean(),
       Match.find().sort({ createdAt: -1 }).lean(),
+      Notification.countDocuments({ read: false }),
     ]);
 
     return NextResponse.json({
@@ -41,6 +42,7 @@ export async function GET() {
           subscriber_count: u.subscriberCount || 0,
           niche: u.niche || 'Tech & SaaS',
           bio: u.bio || '',
+          verified: Boolean(u.verified),
           created_at: u.createdAt,
         })),
       businesses: users
@@ -129,6 +131,7 @@ export async function GET() {
         totalDeals: deals.length,
         totalMatches: matches.length,
       },
+      unreadNotificationsCount: unreadNotifications,
     });
   } catch (error: any) {
     console.error('[admin/data]', error);

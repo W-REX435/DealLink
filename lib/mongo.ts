@@ -54,6 +54,16 @@ export interface IUser extends Document {
   subscriberCount?: number;
   niche?: string;
   bio?: string;
+  socialAccounts?: {
+    youtube?: string;
+    instagram?: string;
+    tiktok?: string;
+    twitter?: string;
+    linkedin?: string;
+  };
+  profileImage?: string;
+  verified: boolean;
+  verifiedAt?: Date;
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
   passwordResetToken?: string;
@@ -81,6 +91,16 @@ const UserSchema = new Schema<IUser>(
     subscriberCount: { type: Number, default: 0 },
     niche: { type: String, default: 'Tech & SaaS' },
     bio: { type: String, default: '' },
+    socialAccounts: {
+      youtube: { type: String, trim: true },
+      instagram: { type: String, trim: true },
+      tiktok: { type: String, trim: true },
+      twitter: { type: String, trim: true },
+      linkedin: { type: String, trim: true },
+    },
+    profileImage: { type: String },
+    verified: { type: Boolean, default: false },
+    verifiedAt: { type: Date },
     emailVerificationToken: { type: String, select: false },
     emailVerificationExpires: { type: Date, select: false },
     passwordResetToken: { type: String, select: false },
@@ -328,3 +348,71 @@ const DealSchema = new Schema<IDeal>(
 );
 
 export const Deal = models.Deal || model<IDeal>('Deal', DealSchema);
+
+/* ------------------------------------------------------------------ */
+/*  Notification                                                       */
+/* ------------------------------------------------------------------ */
+
+export interface INotification extends Document {
+  type: 'new_creator' | 'new_business' | 'connect_request' | 'new_message';
+  message: string;
+  fromUserId: string;
+  fromUserName: string;
+  fromUserEmail: string;
+  toUserId: string;
+  relatedId?: string;
+  read: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const NotificationSchema = new Schema<INotification>(
+  {
+    type: {
+      type: String,
+      enum: ['new_creator', 'new_business', 'connect_request', 'new_message'],
+      required: true,
+    },
+    message: { type: String, required: true },
+    fromUserId: { type: String, required: true },
+    fromUserName: { type: String, required: true },
+    fromUserEmail: { type: String, required: true },
+    toUserId: { type: String, required: true },
+    relatedId: { type: String },
+    read: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
+
+export const Notification =
+  models.Notification || model<INotification>('Notification', NotificationSchema);
+
+/* ------------------------------------------------------------------ */
+/*  ChatMessage                                                        */
+/* ------------------------------------------------------------------ */
+
+export interface IChatMessage extends Document {
+  fromUserId: string;
+  fromUserName: string;
+  fromUserRole: string;
+  toUserId: string;
+  message: string;
+  read: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const ChatMessageSchema = new Schema<IChatMessage>(
+  {
+    fromUserId: { type: String, required: true },
+    fromUserName: { type: String, required: true },
+    fromUserRole: { type: String, required: true },
+    toUserId: { type: String, required: true },
+    message: { type: String, required: true },
+    read: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
+
+export const ChatMessage =
+  models.ChatMessage || model<IChatMessage>('ChatMessage', ChatMessageSchema);
