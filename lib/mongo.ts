@@ -1,4 +1,5 @@
 import mongoose, { Schema, models, model, Document } from 'mongoose';
+import dns from 'dns';
 
 declare global {
   var mongooseCache: {
@@ -19,6 +20,10 @@ export async function dbConnect(): Promise<mongoose.Mongoose> {
       'MONGODB_URI is not set. Copy .env.example to .env.local and fill in your MongoDB connection string.'
     );
   }
+
+  try {
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+  } catch {}
 
   if (!cached.promise) {
     cached.promise = mongoose

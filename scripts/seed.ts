@@ -2,6 +2,10 @@
  * Seed the MongoDB database with the original DealLink demo data.
  * Run: npm run seed
  */
+import path from 'path';
+import dotenv from 'dotenv';
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+
 import bcrypt from 'bcryptjs';
 import { dbConnect, User, BusinessLead, CampaignBrief, Match, Deal } from '../lib/mongo';
 
