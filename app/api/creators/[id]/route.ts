@@ -37,7 +37,6 @@ export async function GET(
         coverImage: user.coverImage || '',
         media: user.media || [],
         videos: user.videos || [],
-        packages: user.packages || [],
         socialAccounts: user.socialAccounts || {},
         badges: user.badges || [],
         verified: Boolean(user.verified),
