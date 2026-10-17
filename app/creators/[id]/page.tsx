@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import CreatorBadges from '@/components/CreatorBadges';
 import { EASE } from '@/lib/motion';
 
 const NICHE_GRADS: Record<string, string> = {
@@ -139,6 +140,9 @@ export default function CreatorProfile() {
                             </span>
                           )}
                         </div>
+                        {Array.isArray(creator.badges) && creator.badges.length > 0 && (
+                          <CreatorBadges badges={creator.badges} size="md" className="mt-2" />
+                        )}
                         {creator.tagline && (
                           <p className="text-sm font-medium text-muted mt-0.5">
                             {creator.tagline}

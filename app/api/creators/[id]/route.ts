@@ -39,6 +39,7 @@ export async function GET(
         videos: user.videos || [],
         packages: user.packages || [],
         socialAccounts: user.socialAccounts || {},
+        badges: user.badges || [],
         verified: Boolean(user.verified),
         emailVerified: Boolean(user.emailVerified),
         created_at: user.createdAt,

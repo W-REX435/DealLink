@@ -60,6 +60,7 @@ export async function GET(req: Request) {
         media: c.media || [],
         videos: c.videos || [],
         packages: c.packages || [],
+        badges: c.badges || [],
         verified: Boolean(c.verified),
         socialAccounts: c.socialAccounts || {},
         created_at: c.createdAt,

@@ -41,6 +41,7 @@ export async function GET() {
         media: user.media || [],
         videos: user.videos || [],
         packages: user.packages || [],
+        badges: user.badges || [],
         verified: Boolean(user.verified),
         created_at: user.createdAt,
       },

@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
+import CreatorBadges from '@/components/CreatorBadges';
 import SubmitButton from '@/components/auth/SubmitButton';
 import DealsPanel from '@/components/deals/DealsPanel';
 import { EASE } from '@/lib/motion';
@@ -726,6 +727,9 @@ export default function CreatorDashboard() {
                               </span>
                             )}
                           </div>
+                          {Array.isArray(creator?.badges) && creator.badges.length > 0 && (
+                            <CreatorBadges badges={creator.badges} size="md" className="mt-1.5" />
+                          )}
                           {creator?.tagline && (
                             <p className="text-xs sm:text-sm font-medium text-muted mt-0.5">{creator.tagline}</p>
                           )}

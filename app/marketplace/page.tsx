@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import CreatorBadges from '@/components/CreatorBadges';
 import { EASE } from '@/lib/motion';
 
 const NICHES = [
@@ -258,6 +259,9 @@ export default function Marketplace() {
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                           
+                          {/* Badges — Top Creator, Responds Fast, etc. */}
+                          <CreatorBadges badges={c.badges} size="sm" className="absolute top-2 left-2 z-10" />
+
                           {/* Media count pills */}
                           <div className="absolute top-2 right-2 flex items-center gap-1">
                             {Array.isArray(c.media) && c.media.length > 0 && (

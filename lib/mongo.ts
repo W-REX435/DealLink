@@ -50,6 +50,7 @@ export interface IUser extends Document {
   company?: string;
   emailVerified: Date | null;
   image?: string;
+  profileImage?: string;
   channelUrl?: string;
   subscriberCount?: number;
   niche?: string;
@@ -69,9 +70,9 @@ export interface IUser extends Document {
     linkedin?: string;
     twitch?: string;
   };
-  profileImage?: string;
   verified: boolean;
   verifiedAt?: Date;
+  badges?: string[];
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
   passwordResetToken?: string;
@@ -136,6 +137,7 @@ const UserSchema = new Schema<IUser>(
     profileImage: { type: String },
     verified: { type: Boolean, default: false },
     verifiedAt: { type: Date },
+    badges: { type: [String], default: [] },
     emailVerificationToken: { type: String, select: false },
     emailVerificationExpires: { type: Date, select: false },
     passwordResetToken: { type: String, select: false },

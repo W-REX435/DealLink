@@ -32,6 +32,7 @@ import {
   MapPin,
   BadgeCheck,
   FileText,
+  Award,
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
@@ -99,7 +100,7 @@ export default function AdminPage() {
 
   // Admin Creator Profile Editor Modal State
   const [editCreatorModal, setEditCreatorModal] = useState<any | null>(null);
-  const [editCreatorSubTab, setEditCreatorSubTab] = useState<'media' | 'social' | 'bio'>('media');
+  const [editCreatorSubTab, setEditCreatorSubTab] = useState<'media' | 'social' | 'bio' | 'badges'>('media');
   const [editCreatorLoading, setEditCreatorLoading] = useState(false);
   const [editCreatorForm, setEditCreatorForm] = useState({
     name: '',
@@ -121,6 +122,7 @@ export default function AdminPage() {
     linkedin: '',
     twitch: '',
     verified: false,
+    badges: [] as string[],
   });
   const [newAdminPhotoUrl, setNewAdminPhotoUrl] = useState('');
   const [newAdminVideoUrl, setNewAdminVideoUrl] = useState('');
@@ -242,6 +244,7 @@ export default function AdminPage() {
       linkedin: c.socialAccounts?.linkedin || '',
       twitch: c.socialAccounts?.twitch || '',
       verified: Boolean(c.verified),
+      badges: Array.isArray(c.badges) ? [...c.badges] : [],
     });
   };
 
@@ -275,6 +278,7 @@ export default function AdminPage() {
             twitch: editCreatorForm.twitch,
           },
           verified: editCreatorForm.verified,
+          badges: editCreatorForm.badges,
         }),
       });
       const json = await res.json();
@@ -723,6 +727,14 @@ export default function AdminPage() {
                                 {c.verified && <BadgeCheck className="h-3.5 w-3.5 text-accent shrink-0" />}
                               </p>
                               <p className="text-xs text-muted-2 truncate">{c.email}</p>
+                              {Array.isArray(c.badges) && c.badges.length > 0 && (
+                                <div className="mt-0.5 flex flex-wrap gap-1">
+                                  {c.badges.slice(0, 2).map((b: string) => (
+                                    <span key={b} className="inline-flex items-center rounded-md border border-white/10 bg-black/80 px-1.5 py-0.5 text-[9px] font-bold text-white capitalize">{b.replace(/-/g, ' ')}</span>
+                                  ))}
+                                  {c.badges.length > 2 && <span className="text-[9px] text-muted-2">+{c.badges.length - 2} more</span>}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -1471,6 +1483,16 @@ export default function AdminPage() {
                 <FileText className="h-3.5 w-3.5" />
                 Details, Bio & Verification
               </button>
+              <button
+                type="button"
+                onClick={() => setEditCreatorSubTab('badges')}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  editCreatorSubTab === 'badges' ? 'bg-primary-2 text-white shadow-soft' : 'text-muted hover:text-foreground'
+                }`}
+              >
+                <Award className="h-3.5 w-3.5" />
+                Badges & Awards
+              </button>
             </div>
 
             <form onSubmit={handleSaveCreatorProfile} className="p-5 sm:p-6 space-y-5 max-h-[70vh] overflow-y-auto">
@@ -1809,6 +1831,110 @@ export default function AdminPage() {
                       Mark as Verified Creator (يظهر كصانع محتوى موثق في الماركت بليس)
                     </label>
                   </div>
+                </div>
+              )}
+
+              {/* SUB-TAB 4: BADGES & AWARDS */}
+              {editCreatorSubTab === 'badges' && (
+                <div className="space-y-4">
+                  {/* Preset badges */}
+                  <div>
+                    <label className="text-xs font-bold text-foreground block mb-2">Preset Badges — click to toggle on/off</label>
+                    <div className="flex flex-wrap gap-2">
+                      {(['top-creator', 'responds-fast', 'featured', 'rising-star', 'high-roi', 'pro-quality'] as string[]).map((badgeId) => {
+                        const isActive = editCreatorForm.badges.includes(badgeId);
+                        const labels: Record<string, string> = {
+                          'top-creator': '🏆 Top Creator',
+                          'responds-fast': '⚡ Responds Fast',
+                          'featured': '✨ Featured',
+                          'rising-star': '📈 Rising Star',
+                          'high-roi': '🔥 High ROI',
+                          'pro-quality': '🛡 Pro Quality',
+                        };
+                        return (
+                          <button
+                            key={badgeId}
+                            type="button"
+                            onClick={() => {
+                              if (isActive) {
+                                setEditCreatorForm({ ...editCreatorForm, badges: editCreatorForm.badges.filter((b) => b !== badgeId) });
+                              } else {
+                                setEditCreatorForm({ ...editCreatorForm, badges: [...editCreatorForm.badges, badgeId] });
+                              }
+                            }}
+                            className={`rounded-xl border px-3 py-2 text-xs font-semibold transition-all ${
+                              isActive
+                                ? 'border-accent/50 bg-accent/15 text-accent shadow-soft'
+                                : 'border-border bg-soft-2 text-muted hover:border-accent/30 hover:text-foreground'
+                            }`}
+                          >
+                            {labels[badgeId]}{isActive && <span className="ml-1.5 text-accent">✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Custom badge input */}
+                  <div>
+                    <label className="dl-label">Add Custom Badge</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="e.g. Brand Partner, Arabic Content..."
+                        className="dl-input text-xs flex-1"
+                        id="custom-badge-input-admin"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const input = document.getElementById('custom-badge-input-admin') as HTMLInputElement;
+                          if (input?.value.trim()) {
+                            setEditCreatorForm({ ...editCreatorForm, badges: [...editCreatorForm.badges, input.value.trim()] });
+                            input.value = '';
+                          }
+                        }}
+                        className="btn-primary py-1.5 px-3 text-xs shrink-0"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Add
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Current badges preview */}
+                  {editCreatorForm.badges.length > 0 ? (
+                    <div className="rounded-xl border border-border p-4 bg-surface/50">
+                      <label className="text-xs font-bold text-foreground block mb-2">
+                        Active Badges ({editCreatorForm.badges.length}) — these appear on creator cards & profile
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {editCreatorForm.badges.map((badge, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-black/85 px-2.5 py-1 text-xs font-bold text-white"
+                          >
+                            {badge.replace(/-/g, ' ')}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next = [...editCreatorForm.badges];
+                                next.splice(idx, 1);
+                                setEditCreatorForm({ ...editCreatorForm, badges: next });
+                              }}
+                              className="text-white/50 hover:text-danger transition-colors"
+                            >
+                              <X className="h-2.5 w-2.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-2">
+                      No badges assigned yet. Toggle preset badges above or add a custom one.
+                    </div>
+                  )}
                 </div>
               )}
 

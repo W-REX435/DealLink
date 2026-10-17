@@ -44,6 +44,7 @@ export async function POST(req: Request) {
     if (body.videos !== undefined) user.videos = Array.isArray(body.videos) ? body.videos : [];
     if (body.packages !== undefined) user.packages = Array.isArray(body.packages) ? body.packages : [];
     if (body.socialAccounts !== undefined) user.socialAccounts = body.socialAccounts;
+    if (body.badges !== undefined) user.badges = Array.isArray(body.badges) ? body.badges : [];
     if (body.verified !== undefined) {
       user.verified = Boolean(body.verified);
       if (user.verified && !user.verifiedAt) {
@@ -73,6 +74,7 @@ export async function POST(req: Request) {
         videos: user.videos,
         packages: user.packages,
         socialAccounts: user.socialAccounts,
+        badges: user.badges || [],
         verified: user.verified,
         emailVerified: Boolean(user.emailVerified),
         created_at: user.createdAt,

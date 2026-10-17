@@ -51,6 +51,7 @@ export async function GET() {
           videos: u.videos || [],
           packages: u.packages || [],
           socialAccounts: u.socialAccounts || {},
+          badges: u.badges || [],
           verified: Boolean(u.verified),
           created_at: u.createdAt,
         })),
