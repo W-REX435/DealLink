@@ -54,12 +54,20 @@ export interface IUser extends Document {
   subscriberCount?: number;
   niche?: string;
   bio?: string;
+  tagline?: string;
+  location?: string;
+  pricingRate?: number;
+  coverImage?: string;
+  media?: string[];
+  videos?: { title?: string; url: string; platform?: string }[];
+  packages?: { title: string; price: number; description?: string; deliverable?: string }[];
   socialAccounts?: {
     youtube?: string;
     instagram?: string;
     tiktok?: string;
     twitter?: string;
     linkedin?: string;
+    twitch?: string;
   };
   profileImage?: string;
   verified: boolean;
@@ -91,12 +99,39 @@ const UserSchema = new Schema<IUser>(
     subscriberCount: { type: Number, default: 0 },
     niche: { type: String, default: 'Tech & SaaS' },
     bio: { type: String, default: '' },
+    tagline: { type: String, trim: true, default: '' },
+    location: { type: String, trim: true, default: '' },
+    pricingRate: { type: Number, default: 0 },
+    coverImage: { type: String, default: '' },
+    media: { type: [String], default: [] },
+    videos: {
+      type: [
+        {
+          title: { type: String, default: '' },
+          url: { type: String, required: true },
+          platform: { type: String, default: 'youtube' },
+        },
+      ],
+      default: [],
+    },
+    packages: {
+      type: [
+        {
+          title: { type: String, required: true },
+          price: { type: Number, default: 0 },
+          description: { type: String, default: '' },
+          deliverable: { type: String, default: '' },
+        },
+      ],
+      default: [],
+    },
     socialAccounts: {
       youtube: { type: String, trim: true },
       instagram: { type: String, trim: true },
       tiktok: { type: String, trim: true },
       twitter: { type: String, trim: true },
       linkedin: { type: String, trim: true },
+      twitch: { type: String, trim: true },
     },
     profileImage: { type: String },
     verified: { type: Boolean, default: false },

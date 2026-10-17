@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { dbConnect, ChatMessage, User } from '@/lib/mongo';
+import { dbConnect, ChatMessage, User, Notification } from '@/lib/mongo';
 import { cookies } from 'next/headers';
 import { auth } from '@/auth';
+import { sendChatMessageNotificationEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +10,7 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const queryUserId = searchParams.get('userId');
-    
+
     const cookieStore = cookies();
     const adminAuth = cookieStore.get('deallink_admin_auth');
     const isAdmin = adminAuth?.value === 'authenticated_rex';
@@ -22,7 +23,7 @@ export async function GET(req: Request) {
     }
 
     await dbConnect();
-    
+
     let messages = [];
 
     if (isAdmin) {
@@ -30,8 +31,8 @@ export async function GET(req: Request) {
         messages = await ChatMessage.find({
           $or: [
             { fromUserId: queryUserId, toUserId: 'admin' },
-            { fromUserId: 'admin', toUserId: queryUserId }
-          ]
+            { fromUserId: 'admin', toUserId: queryUserId },
+          ],
         }).sort({ createdAt: 1 });
       } else {
         messages = await ChatMessage.find().sort({ createdAt: 1 });
@@ -40,8 +41,8 @@ export async function GET(req: Request) {
       messages = await ChatMessage.find({
         $or: [
           { fromUserId: sessionUserId, toUserId: 'admin' },
-          { fromUserId: 'admin', toUserId: sessionUserId }
-        ]
+          { fromUserId: 'admin', toUserId: sessionUserId },
+        ],
       }).sort({ createdAt: 1 });
     }
 
@@ -76,16 +77,14 @@ export async function POST(req: Request) {
 
     await dbConnect();
 
-    let fromUserId, fromUserName, fromUserRole;
+    let fromUserId: string;
+    let fromUserName: string;
+    let fromUserRole: string;
 
-    if (isAdmin && !sessionUserId) {
+    if (isAdmin) {
       fromUserId = 'admin';
-      fromUserName = 'Admin';
+      fromUserName = 'DealLink Team';
       fromUserRole = 'admin';
-    } else if (isAdmin && sessionUserId) {
-       fromUserId = 'admin';
-       fromUserName = 'Admin';
-       fromUserRole = 'admin';
     } else {
       const user = await User.findById(sessionUserId);
       if (!user) {
@@ -93,7 +92,7 @@ export async function POST(req: Request) {
       }
       fromUserId = user._id.toString();
       fromUserName = user.name;
-      fromUserRole = user.role;
+      fromUserRole = user.role || 'creator';
     }
 
     const chatMsg = new ChatMessage({
@@ -106,6 +105,39 @@ export async function POST(req: Request) {
 
     await chatMsg.save();
 
+    // If message is sent to a creator/user (not to admin), send them an email notification!
+    if (toUserId !== 'admin') {
+      try {
+        const recipient = await User.findById(toUserId).lean();
+        if (recipient && recipient.email) {
+          await sendChatMessageNotificationEmail(
+            recipient.email,
+            recipient.name,
+            fromUserName,
+            message
+          );
+        }
+      } catch (emailErr) {
+        console.error('[chat] Failed to send email notification to creator:', emailErr);
+      }
+    } else {
+      // User sent message to admin — create admin notification
+      try {
+        await Notification.create({
+          type: 'new_message',
+          message: `New message from ${fromUserName}: "${message.slice(0, 80)}"`,
+          fromUserId,
+          fromUserName,
+          fromUserEmail: session?.user?.email || '',
+          toUserId: 'admin',
+          relatedId: chatMsg._id.toString(),
+          read: false,
+        });
+      } catch (notifErr) {
+        console.error('[chat] Failed to create admin notification:', notifErr);
+      }
+    }
+
     return NextResponse.json({ success: true, message: chatMsg });
   } catch (error: any) {
     return NextResponse.json(
@@ -114,3 +146,4 @@ export async function POST(req: Request) {
     );
   }
 }
+

@@ -32,8 +32,15 @@ export async function GET() {
         subscriber_count: user.subscriberCount || 0,
         niche: user.niche || 'Tech & SaaS',
         bio: user.bio || '',
+        tagline: user.tagline || '',
+        location: user.location || '',
+        pricingRate: user.pricingRate || 0,
         socialAccounts: user.socialAccounts || {},
         profileImage: user.profileImage || '',
+        coverImage: user.coverImage || '',
+        media: user.media || [],
+        videos: user.videos || [],
+        packages: user.packages || [],
         verified: Boolean(user.verified),
         created_at: user.createdAt,
       },
@@ -64,21 +71,28 @@ export async function PUT(req: Request) {
 
     const max = (v: unknown, n: number) =>
       typeof v === 'string' && v.trim().length > n;
-    if (max(body.name, 80) || max(body.channel_url, 300) || max(body.bio, 1000)) {
+    if (max(body.name, 100) || max(body.bio, 2500) || max(body.tagline, 200)) {
       return NextResponse.json(
         { error: 'Some fields are too long.' },
         { status: 400 }
       );
     }
 
-    if (body.name !== undefined) user.name = body.name;
+    if (body.name !== undefined) user.name = body.name.trim();
     if (body.channel_url !== undefined) user.channelUrl = body.channel_url;
     if (body.subscriber_count !== undefined)
       user.subscriberCount = Number(body.subscriber_count) || 0;
     if (body.niche !== undefined) user.niche = body.niche;
     if (body.bio !== undefined) user.bio = body.bio;
+    if (body.tagline !== undefined) user.tagline = body.tagline;
+    if (body.location !== undefined) user.location = body.location;
+    if (body.pricingRate !== undefined) user.pricingRate = Number(body.pricingRate) || 0;
     if (body.socialAccounts !== undefined) user.socialAccounts = body.socialAccounts;
     if (body.profileImage !== undefined) user.profileImage = body.profileImage;
+    if (body.coverImage !== undefined) user.coverImage = body.coverImage;
+    if (body.media !== undefined) user.media = Array.isArray(body.media) ? body.media : [];
+    if (body.videos !== undefined) user.videos = Array.isArray(body.videos) ? body.videos : [];
+    if (body.packages !== undefined) user.packages = Array.isArray(body.packages) ? body.packages : [];
 
     await user.save();
 
@@ -93,8 +107,15 @@ export async function PUT(req: Request) {
         subscriber_count: user.subscriberCount || 0,
         niche: user.niche || 'Tech & SaaS',
         bio: user.bio || '',
+        tagline: user.tagline || '',
+        location: user.location || '',
+        pricingRate: user.pricingRate || 0,
         socialAccounts: user.socialAccounts || {},
         profileImage: user.profileImage || '',
+        coverImage: user.coverImage || '',
+        media: user.media || [],
+        videos: user.videos || [],
+        packages: user.packages || [],
         verified: Boolean(user.verified),
         created_at: user.createdAt,
       },

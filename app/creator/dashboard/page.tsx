@@ -26,6 +26,13 @@ import {
   AlertCircle,
   ArrowRight,
   Search,
+  Image as ImageIcon,
+  Video,
+  Plus,
+  Trash2,
+  MapPin,
+  Camera,
+  Play,
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
@@ -77,18 +84,30 @@ export default function CreatorDashboard() {
   const [saveMessage, setSaveMessage] = useState('');
   const [error, setError] = useState('');
 
+  // Clean sub-tabs for Edit Profile: media | social | bio
+  const [editSubTab, setEditSubTab] = useState<'media' | 'social' | 'bio'>('media');
+  const [newPhotoUrl, setNewPhotoUrl] = useState('');
+  const [newVideoUrl, setNewVideoUrl] = useState('');
+  const [newVideoTitle, setNewVideoTitle] = useState('');
+
   const [editForm, setEditForm] = useState({
     name: '',
-    channel_url: '',
     subscriber_count: '',
     niche: '',
     bio: '',
+    tagline: '',
+    location: '',
+    pricingRate: '',
     profileImage: '',
+    coverImage: '',
+    media: [] as string[],
+    videos: [] as { title?: string; url: string; platform?: string }[],
     youtube: '',
     instagram: '',
     tiktok: '',
     twitter: '',
     linkedin: '',
+    twitch: '',
   });
 
   const [chatMessages, setChatMessages] = useState<any[]>([]);
@@ -116,16 +135,22 @@ export default function CreatorDashboard() {
       setCreator(data.creator);
       setEditForm({
         name: data.creator.name || '',
-        channel_url: data.creator.channel_url || '',
         subscriber_count: String(data.creator.subscriber_count || 0),
         niche: data.creator.niche || NICHES[0],
         bio: data.creator.bio || '',
+        tagline: data.creator.tagline || '',
+        location: data.creator.location || '',
+        pricingRate: String(data.creator.pricingRate || 0),
         profileImage: data.creator.profileImage || '',
+        coverImage: data.creator.coverImage || '',
+        media: Array.isArray(data.creator.media) ? data.creator.media : [],
+        videos: Array.isArray(data.creator.videos) ? data.creator.videos : [],
         youtube: data.creator.socialAccounts?.youtube || '',
         instagram: data.creator.socialAccounts?.instagram || '',
         tiktok: data.creator.socialAccounts?.tiktok || '',
         twitter: data.creator.socialAccounts?.twitter || '',
         linkedin: data.creator.socialAccounts?.linkedin || '',
+        twitch: data.creator.socialAccounts?.twitch || '',
       });
     } catch {
       setError('Failed to load creator profile.');
@@ -255,18 +280,24 @@ export default function CreatorDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: editForm.name,
-          channel_url: editForm.channel_url,
           subscriber_count: Number(editForm.subscriber_count) || 0,
           niche: editForm.niche,
           bio: editForm.bio,
+          tagline: editForm.tagline,
+          location: editForm.location,
+          pricingRate: Number(editForm.pricingRate) || 0,
           profileImage: editForm.profileImage,
+          coverImage: editForm.coverImage,
+          media: editForm.media,
+          videos: editForm.videos,
           socialAccounts: {
             youtube: editForm.youtube,
             instagram: editForm.instagram,
             tiktok: editForm.tiktok,
             twitter: editForm.twitter,
             linkedin: editForm.linkedin,
-          }
+            twitch: editForm.twitch,
+          },
         }),
       });
       const data = await res.json();
@@ -642,105 +673,184 @@ export default function CreatorDashboard() {
                   ))}
                 </div>
 
-                {/* Profile card */}
-                <div className="dl-card p-6">
-                  <div className="flex flex-col gap-5 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-3.5">
-                      <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary-2 to-accent text-xl font-bold text-white shrink-0">
-                        {creator?.profileImage ? (
-                          <img src={creator.profileImage} alt={creator.name} className="h-full w-full object-cover" />
-                        ) : (
-                          (creator?.name || '?')[0]
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="flex items-center gap-1.5 text-lg font-semibold tracking-tight text-foreground">
-                            {creator?.name}
-                            {creator?.emailVerified && (
-                              <BadgeCheck className="h-4 w-4 text-accent" />
-                            )}
-                          </p>
-                          {creator?.verified ? (
-                            <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] font-bold text-green-500">Verified ✓</span>
-                          ) : (
-                            <span className="rounded-full bg-yellow-500/10 px-2 py-0.5 text-[10px] font-bold text-yellow-500">Pending verification</span>
-                          )}
-                        </div>
-                        <p className="flex items-center gap-1 text-xs text-muted-2 mt-1">
-                          <Mail className="h-3 w-3" />
-                          {creator?.email}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="self-start rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
-                      {creator?.niche}
-                    </span>
+                {/* Profile card with Banner */}
+                <div className="dl-card overflow-hidden">
+                  {/* Banner Header */}
+                  <div className="relative h-44 sm:h-56 w-full overflow-hidden bg-gradient-to-r from-primary via-primary-2 to-accent/30">
+                    {creator?.coverImage ? (
+                      <img src={creator.coverImage} alt="Cover Banner" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="absolute inset-0 bg-dot-grid opacity-30" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    
+                    <button
+                      onClick={() => {
+                        setTab('edit');
+                        setEditSubTab('media');
+                        setIsEditing(true);
+                      }}
+                      className="absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-black/40 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md transition-colors hover:bg-black/60"
+                    >
+                      <Camera className="h-3.5 w-3.5" />
+                      Change Banner
+                    </button>
                   </div>
 
-                  <div className="mt-5 space-y-4">
-                    <div>
+                  <div className="p-6 sm:p-8">
+                    {/* Creator Identity overlapping banner */}
+                    <div className="relative -mt-16 sm:-mt-20 mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                      <div className="flex items-end gap-4">
+                        <div className="relative flex h-24 w-24 sm:h-28 sm:w-28 items-center justify-center overflow-hidden rounded-2xl border-4 border-surface bg-gradient-to-br from-primary-2 to-accent text-3xl font-bold text-white shadow-xl shrink-0">
+                          {creator?.profileImage ? (
+                            <img src={creator.profileImage} alt={creator.name} className="h-full w-full object-cover" />
+                          ) : (
+                            (creator?.name || '?')[0]
+                          )}
+                          {creator?.verified && (
+                            <span className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-white shadow">
+                              <BadgeCheck className="h-4 w-4" />
+                            </span>
+                          )}
+                        </div>
+                        <div className="min-w-0 pb-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h2 className="text-xl sm:text-2xl font-bold text-foreground">{creator?.name}</h2>
+                            {creator?.verified ? (
+                              <span className="rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-bold text-green-500">
+                                Verified ✓
+                              </span>
+                            ) : (
+                              <span className="rounded-full bg-yellow-500/10 px-2.5 py-0.5 text-xs font-bold text-yellow-500">
+                                Pending verification
+                              </span>
+                            )}
+                          </div>
+                          {creator?.tagline && (
+                            <p className="text-xs sm:text-sm font-medium text-muted mt-0.5">{creator.tagline}</p>
+                          )}
+                          <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-2">
+                            {creator?.location && (
+                              <span className="inline-flex items-center gap-1">
+                                <MapPin className="h-3 w-3 text-accent" />
+                                {creator.location}
+                              </span>
+                            )}
+                            <span className="inline-flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              {creator?.email}
+                            </span>
+                            <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                              <Users className="h-3 w-3 text-accent" />
+                              {Number(creator?.subscriber_count || 0).toLocaleString()} audience
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full border border-accent/30 bg-accent/10 px-3.5 py-1 text-xs font-semibold text-accent">
+                          {creator?.niche}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setTab('edit');
+                            setIsEditing(true);
+                          }}
+                          className="btn-primary py-2 px-3.5 text-xs"
+                        >
+                          <Edit3 className="h-3.5 w-3.5" />
+                          Edit profile
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Social Media Accounts */}
+                    <div className="border-t border-border pt-5 pb-5">
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-2 block mb-2.5">
+                        Social Media Channels
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {['youtube', 'instagram', 'tiktok', 'twitter', 'linkedin', 'twitch'].map((platform) => {
+                          const url = creator?.socialAccounts?.[platform];
+                          if (!url) return null;
+                          return (
+                            <a
+                              key={platform}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold capitalize text-foreground transition-all hover:border-accent/40 hover:text-accent shadow-soft"
+                            >
+                              <span>{platform === 'twitter' ? 'X / Twitter' : platform}</span>
+                              <ExternalLink className="h-3 w-3 text-muted-2" />
+                            </a>
+                          );
+                        })}
+                        {!Object.values(creator?.socialAccounts || {}).some(Boolean) && (
+                          <span className="text-xs text-muted-2">No social accounts linked yet. Click Edit Profile to add them.</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Bio */}
+                    <div className="border-t border-border pt-5 pb-5">
                       <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-2">
                         <FileText className="h-3.5 w-3.5" />
-                        Bio
+                        About & Bio
                       </span>
                       <p className="mt-2 text-sm leading-relaxed text-muted">
                         {creator?.bio || 'No bio yet — add one so brands understand your content.'}
                       </p>
                     </div>
 
-                    <div>
-                      <span className="text-xs font-bold uppercase tracking-wider text-muted-2">
-                        Social Accounts
-                      </span>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {['youtube', 'instagram', 'tiktok', 'twitter', 'linkedin'].map((platform) => {
-                          const url = creator?.socialAccounts?.[platform];
-                          if (!url) return null;
-                          return (
-                            <a key={platform} href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface/50 px-3 py-1.5 text-xs font-medium capitalize text-muted hover:text-foreground">
-                              {platform}
+                    {/* Showcase Photos Gallery (like reference image) */}
+                    {Array.isArray(creator?.media) && creator.media.length > 0 && (
+                      <div className="border-t border-border pt-5 pb-5">
+                        <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-2 mb-3">
+                          <ImageIcon className="h-3.5 w-3.5 text-accent" />
+                          Photo Portfolio ({creator.media.length})
+                        </span>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          {creator.media.map((imgUrl: string, idx: number) => (
+                            <div key={idx} className="relative h-36 sm:h-44 rounded-xl overflow-hidden group border border-border shadow-soft">
+                              <img src={imgUrl} alt={`Showcase ${idx + 1}`} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Showcase Videos */}
+                    {Array.isArray(creator?.videos) && creator.videos.length > 0 && (
+                      <div className="border-t border-border pt-5">
+                        <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-2 mb-3">
+                          <Video className="h-3.5 w-3.5 text-accent" />
+                          Featured Videos ({creator.videos.length})
+                        </span>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {creator.videos.map((vid: any, idx: number) => (
+                            <a
+                              key={idx}
+                              href={vid.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 p-3 rounded-xl border border-border bg-surface hover:border-accent/40 transition-colors shadow-soft"
+                            >
+                              <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center text-accent shrink-0">
+                                <Play className="h-4 w-4 fill-current" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold text-foreground truncate">{vid.title || `Video ${idx + 1}`}</p>
+                                <p className="text-[11px] text-muted-2 truncate">{vid.url}</p>
+                              </div>
+                              <ExternalLink className="h-3.5 w-3.5 text-muted-2 shrink-0" />
                             </a>
-                          )
-                        })}
-                        {!Object.values(creator?.socialAccounts || {}).some(Boolean) && (
-                          <span className="text-sm text-muted-2">No social accounts linked.</span>
-                        )}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-
-                    <div>
-                      <span className="text-xs font-bold uppercase tracking-wider text-muted-2">
-                        Channel
-                      </span>
-                      <div className="mt-2">
-                        {creator?.channel_url ? (
-                          <a
-                            href={creator.channel_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-foreground"
-                          >
-                            <span className="truncate">{creator.channel_url}</span>
-                            <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                          </a>
-                        ) : (
-                          <span className="text-sm text-muted-2">No channel linked.</span>
-                        )}
-                      </div>
-                    </div>
+                    )}
                   </div>
-
-                  <button
-                    onClick={() => {
-                      setTab('edit');
-                      setIsEditing(true);
-                    }}
-                    className="btn-ghost mt-6"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                    Edit profile
-                  </button>
                 </div>
               </div>
 
@@ -785,141 +895,412 @@ export default function CreatorDashboard() {
             </div>
           )}
 
-          {/* EDIT */}
+          {/* EDIT PROFILE - CLEAN SUB-TABS */}
           {tab === 'edit' && (
-            <div className="dl-card mx-auto max-w-2xl p-6 sm:p-8">
-              <h3 className="mb-6 flex items-center gap-2 border-b border-border pb-4 text-lg font-semibold tracking-tight text-foreground">
-                <Edit3 className="h-5 w-5 text-accent" />
-                Update profile
-              </h3>
-              <form onSubmit={handleSave} className="space-y-5">
-                <div className="flex flex-col items-center gap-4 sm:flex-row">
-                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary-2 to-accent text-3xl font-bold text-white shrink-0">
-                    {editForm.profileImage ? (
-                      <img src={editForm.profileImage} alt="Profile" className="h-full w-full object-cover" />
-                    ) : (
-                      (editForm.name || '?')[0]
-                    )}
-                  </div>
-                  <div>
-                    <label className="dl-label">Profile Image (Max 2MB)</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          if (file.size > 2 * 1024 * 1024) {
-                            alert('Image must be less than 2MB');
-                            return;
-                          }
-                          const reader = new FileReader();
-                          reader.onloadend = () => setEditForm({ ...editForm, profileImage: reader.result as string });
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                      className="mt-1 block text-sm text-muted-2 file:mr-4 file:rounded-full file:border-0 file:bg-accent/10 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-accent hover:file:bg-accent/20"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="dl-label">Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="dl-input"
-                  />
-                </div>
-                <div>
-                  <label className="dl-label">Channel / profile link</label>
-                  <input
-                    type="url"
-                    required
-                    value={editForm.channel_url}
-                    onChange={(e) => setEditForm({ ...editForm, channel_url: e.target.value })}
-                    className="dl-input"
-                  />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="dl-label">Audience size</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={editForm.subscriber_count}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, subscriber_count: e.target.value })
-                      }
-                      className="dl-input"
-                    />
-                  </div>
-                  <div>
-                    <label className="dl-label">Niche</label>
-                    <select
-                      value={editForm.niche}
-                      onChange={(e) => setEditForm({ ...editForm, niche: e.target.value })}
-                      className="dl-input appearance-none"
-                    >
-                      {NICHES.map((n) => (
-                        <option key={n} value={n}>
-                          {n}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="dl-label">Bio</label>
-                  <textarea
-                    rows={4}
-                    value={editForm.bio}
-                    onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
-                    className="dl-input resize-none"
-                  />
-                </div>
+            <div className="dl-card mx-auto max-w-3xl p-6 sm:p-8">
+              <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4 gap-3">
+                <h3 className="flex items-center gap-2 text-xl font-bold tracking-tight text-foreground">
+                  <Edit3 className="h-5 w-5 text-accent" />
+                  Edit Profile
+                </h3>
 
-                <div className="space-y-4 rounded-xl border border-border p-4 bg-surface/50">
-                  <h4 className="text-sm font-semibold text-foreground">Social Accounts (Optional)</h4>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label className="dl-label">YouTube</label>
-                      <input type="url" value={editForm.youtube} onChange={(e) => setEditForm({ ...editForm, youtube: e.target.value })} className="dl-input" />
+                {/* Sub-tab Switcher: Separating media, social, and bio as requested */}
+                <div className="flex rounded-xl bg-soft-2 p-1 border border-border">
+                  <button
+                    type="button"
+                    onClick={() => setEditSubTab('media')}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                      editSubTab === 'media' ? 'bg-primary-2 text-white shadow-soft' : 'text-muted hover:text-foreground'
+                    }`}
+                  >
+                    <ImageIcon className="h-3.5 w-3.5" />
+                    Media & Banner
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditSubTab('social')}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                      editSubTab === 'social' ? 'bg-primary-2 text-white shadow-soft' : 'text-muted hover:text-foreground'
+                    }`}
+                  >
+                    <Users className="h-3.5 w-3.5" />
+                    Social Accounts
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditSubTab('bio')}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                      editSubTab === 'bio' ? 'bg-primary-2 text-white shadow-soft' : 'text-muted hover:text-foreground'
+                    }`}
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                    Details & Bio
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleSave} className="space-y-6">
+                {/* SUB-TAB 1: MEDIA & BANNER */}
+                {editSubTab === 'media' && (
+                  <div className="space-y-6">
+                    {/* Cover Banner */}
+                    <div className="rounded-2xl border border-border p-4 sm:p-5 bg-surface/50">
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                          <Camera className="h-4 w-4 text-accent" />
+                          Hero Banner / Cover Photo
+                        </label>
+                        {editForm.coverImage && (
+                          <button
+                            type="button"
+                            onClick={() => setEditForm({ ...editForm, coverImage: '' })}
+                            className="text-xs text-danger font-semibold hover:underline"
+                          >
+                            Remove Banner
+                          </button>
+                        )}
+                      </div>
+                      <div className="relative h-36 w-full rounded-xl overflow-hidden border border-border bg-soft-2 mb-3">
+                        {editForm.coverImage ? (
+                          <img src={editForm.coverImage} alt="Banner Preview" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-xs text-muted">
+                            No cover banner set. Upload an image to stand out in the marketplace.
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (file.size > 2 * 1024 * 1024) {
+                                alert('Banner image must be less than 2MB');
+                                return;
+                              }
+                              const reader = new FileReader();
+                              reader.onloadend = () => setEditForm({ ...editForm, coverImage: reader.result as string });
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="block w-full text-xs text-muted file:mr-3 file:rounded-xl file:border-0 file:bg-accent/10 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-accent hover:file:bg-accent/20"
+                        />
+                        <input
+                          type="url"
+                          placeholder="Or paste banner image URL..."
+                          value={editForm.coverImage.startsWith('data:') ? '' : editForm.coverImage}
+                          onChange={(e) => setEditForm({ ...editForm, coverImage: e.target.value })}
+                          className="dl-input text-xs sm:w-1/2"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="dl-label">Instagram</label>
-                      <input type="url" value={editForm.instagram} onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })} className="dl-input" />
+
+                    {/* Profile Picture */}
+                    <div className="rounded-2xl border border-border p-4 sm:p-5 bg-surface/50">
+                      <label className="text-sm font-bold text-foreground block mb-3">Profile Picture</label>
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-primary-2 to-accent text-2xl font-bold text-white shrink-0 border border-border shadow-soft">
+                          {editForm.profileImage ? (
+                            <img src={editForm.profileImage} alt="Profile" className="h-full w-full object-cover" />
+                          ) : (
+                            (editForm.name || '?')[0]
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                if (file.size > 2 * 1024 * 1024) {
+                                  alert('Profile image must be less than 2MB');
+                                  return;
+                                }
+                                const reader = new FileReader();
+                                reader.onloadend = () => setEditForm({ ...editForm, profileImage: reader.result as string });
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            className="block w-full text-xs text-muted file:mr-3 file:rounded-xl file:border-0 file:bg-accent/10 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-accent hover:file:bg-accent/20"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="dl-label">TikTok</label>
-                      <input type="url" value={editForm.tiktok} onChange={(e) => setEditForm({ ...editForm, tiktok: e.target.value })} className="dl-input" />
+
+                    {/* Photo Portfolio Manager */}
+                    <div className="rounded-2xl border border-border p-4 sm:p-5 bg-surface/50">
+                      <label className="text-sm font-bold text-foreground block mb-1">
+                        Showcase Photos ({editForm.media.length})
+                      </label>
+                      <p className="text-xs text-muted mb-3">Add work samples, photos, or behind-the-scenes content.</p>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+                        {editForm.media.map((url, idx) => (
+                          <div key={idx} className="relative h-28 rounded-xl overflow-hidden border border-border group">
+                            <img src={url} alt={`Media ${idx}`} className="h-full w-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next = [...editForm.media];
+                                next.splice(idx, 1);
+                                setEditForm({ ...editForm, media: next });
+                              }}
+                              className="absolute top-1.5 right-1.5 rounded-lg bg-black/70 p-1 text-white hover:bg-danger transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <input
+                          type="url"
+                          placeholder="Paste image URL..."
+                          value={newPhotoUrl}
+                          onChange={(e) => setNewPhotoUrl(e.target.value)}
+                          className="dl-input text-xs flex-1"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (newPhotoUrl.trim()) {
+                              setEditForm({ ...editForm, media: [...editForm.media, newPhotoUrl.trim()] });
+                              setNewPhotoUrl('');
+                            }
+                          }}
+                          className="btn-primary py-2 px-3 text-xs shrink-0"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          Add Photo
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <label className="dl-label">Twitter / X</label>
-                      <input type="url" value={editForm.twitter} onChange={(e) => setEditForm({ ...editForm, twitter: e.target.value })} className="dl-input" />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="dl-label">LinkedIn</label>
-                      <input type="url" value={editForm.linkedin} onChange={(e) => setEditForm({ ...editForm, linkedin: e.target.value })} className="dl-input" />
+
+                    {/* Video Showcase Manager */}
+                    <div className="rounded-2xl border border-border p-4 sm:p-5 bg-surface/50">
+                      <label className="text-sm font-bold text-foreground block mb-1">
+                        Featured Videos ({editForm.videos.length})
+                      </label>
+                      <p className="text-xs text-muted mb-3">Add links to your best videos (YouTube, TikTok, Reels, Vimeo).</p>
+
+                      <div className="space-y-2 mb-4">
+                        {editForm.videos.map((vid, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl border border-border bg-surface text-xs">
+                            <div className="min-w-0 flex-1 flex items-center gap-2">
+                              <Play className="h-3.5 w-3.5 text-accent shrink-0" />
+                              <span className="font-semibold text-foreground truncate">{vid.title || 'Video'}</span>
+                              <span className="text-muted-2 truncate text-[11px]">{vid.url}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next = [...editForm.videos];
+                                next.splice(idx, 1);
+                                setEditForm({ ...editForm, videos: next });
+                              }}
+                              className="text-danger hover:opacity-80 p-1 shrink-0 ml-2"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          type="text"
+                          placeholder="Video Title (e.g. 1M Views Tech Review)"
+                          value={newVideoTitle}
+                          onChange={(e) => setNewVideoTitle(e.target.value)}
+                          className="dl-input text-xs sm:w-1/3"
+                        />
+                        <input
+                          type="url"
+                          placeholder="Video URL (YouTube, TikTok, etc.)"
+                          value={newVideoUrl}
+                          onChange={(e) => setNewVideoUrl(e.target.value)}
+                          className="dl-input text-xs flex-1"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (newVideoUrl.trim()) {
+                              setEditForm({
+                                ...editForm,
+                                videos: [
+                                  ...editForm.videos,
+                                  { title: newVideoTitle.trim() || 'Showcase Video', url: newVideoUrl.trim() },
+                                ],
+                              });
+                              setNewVideoTitle('');
+                              setNewVideoUrl('');
+                            }
+                          }}
+                          className="btn-primary py-2 px-3 text-xs shrink-0"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          Add Video
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
-                <div className="flex items-center gap-3 pt-1">
-                  <SubmitButton
-                    loading={saveLoading}
-                    success={saveSuccess}
-                    label={
-                      <>
-                        <Save className="h-4 w-4" />
-                        Save changes
-                      </>
-                    }
-                    loadingLabel="Saving..."
-                    successLabel="Saved!"
-                    className="btn-primary"
-                  />
+                {/* SUB-TAB 2: SOCIAL ACCOUNTS (Channel link removed) */}
+                {editSubTab === 'social' && (
+                  <div className="space-y-4 rounded-2xl border border-border p-5 bg-surface/50">
+                    <div>
+                      <h4 className="text-base font-bold text-foreground">Social Media Accounts</h4>
+                      <p className="text-xs text-muted mt-0.5">Enter the full URLs to your social channels. Leave blank any you don&apos;t use.</p>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2 pt-2">
+                      <div>
+                        <label className="dl-label">YouTube Channel URL</label>
+                        <input
+                          type="url"
+                          placeholder="https://youtube.com/@channel"
+                          value={editForm.youtube}
+                          onChange={(e) => setEditForm({ ...editForm, youtube: e.target.value })}
+                          className="dl-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="dl-label">Instagram Profile URL</label>
+                        <input
+                          type="url"
+                          placeholder="https://instagram.com/username"
+                          value={editForm.instagram}
+                          onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })}
+                          className="dl-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="dl-label">TikTok Profile URL</label>
+                        <input
+                          type="url"
+                          placeholder="https://tiktok.com/@username"
+                          value={editForm.tiktok}
+                          onChange={(e) => setEditForm({ ...editForm, tiktok: e.target.value })}
+                          className="dl-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="dl-label">Twitter / X URL</label>
+                        <input
+                          type="url"
+                          placeholder="https://x.com/username"
+                          value={editForm.twitter}
+                          onChange={(e) => setEditForm({ ...editForm, twitter: e.target.value })}
+                          className="dl-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="dl-label">LinkedIn Profile URL</label>
+                        <input
+                          type="url"
+                          placeholder="https://linkedin.com/in/username"
+                          value={editForm.linkedin}
+                          onChange={(e) => setEditForm({ ...editForm, linkedin: e.target.value })}
+                          className="dl-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="dl-label">Twitch URL</label>
+                        <input
+                          type="url"
+                          placeholder="https://twitch.tv/username"
+                          value={editForm.twitch}
+                          onChange={(e) => setEditForm({ ...editForm, twitch: e.target.value })}
+                          className="dl-input"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SUB-TAB 3: DETAILS & BIO */}
+                {editSubTab === 'bio' && (
+                  <div className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="dl-label">Full Name</label>
+                        <input
+                          type="text"
+                          required
+                          value={editForm.name}
+                          onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                          className="dl-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="dl-label">Tagline (Title)</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Tech & Coding | Dev Content Creator"
+                          value={editForm.tagline}
+                          onChange={(e) => setEditForm({ ...editForm, tagline: e.target.value })}
+                          className="dl-input"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div>
+                        <label className="dl-label">Location</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Riyadh, Saudi Arabia"
+                          value={editForm.location}
+                          onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                          className="dl-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="dl-label">Total Audience Size</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editForm.subscriber_count}
+                          onChange={(e) => setEditForm({ ...editForm, subscriber_count: e.target.value })}
+                          className="dl-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="dl-label">Niche</label>
+                        <select
+                          value={editForm.niche}
+                          onChange={(e) => setEditForm({ ...editForm, niche: e.target.value })}
+                          className="dl-input appearance-none"
+                        >
+                          {NICHES.map((n) => (
+                            <option key={n} value={n}>
+                              {n}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="dl-label">Bio & Overview</label>
+                      <textarea
+                        rows={4}
+                        placeholder="Tell brands about your audience demographics, past partnerships, and what makes your content unique..."
+                        value={editForm.bio}
+                        onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                        className="dl-input resize-none"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex items-center justify-between border-t border-border pt-4">
                   <button
                     type="button"
                     onClick={() => {
@@ -930,6 +1311,22 @@ export default function CreatorDashboard() {
                   >
                     Cancel
                   </button>
+
+                  <div className="flex items-center gap-2">
+                    <SubmitButton
+                      loading={saveLoading}
+                      success={saveSuccess}
+                      label={
+                        <>
+                          <Save className="h-4 w-4" />
+                          Save changes
+                        </>
+                      }
+                      loadingLabel="Saving..."
+                      successLabel="Saved!"
+                      className="btn-primary"
+                    />
+                  </div>
                 </div>
               </form>
             </div>

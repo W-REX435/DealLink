@@ -248,61 +248,104 @@ export default function Marketplace() {
                     whileHover={{ y: -4 }}
                   >
                     <Link href={`/creators/${c.id}`} className="block h-full">
-                      <div className="dl-card group flex h-full flex-col p-5 transition-shadow duration-300 hover:shadow-mid">
-                        <div className="flex items-center gap-3.5">
-                          {/* Avatar — profile image or gradient initial */}
-                          <div className="relative shrink-0">
-                            {c.profileImage ? (
-                              <div className="h-12 w-12 overflow-hidden rounded-xl">
-                                <Image
-                                  src={c.profileImage}
-                                  alt={c.name}
-                                  width={48}
-                                  height={48}
-                                  className="h-full w-full object-cover"
-                                  unoptimized
-                                />
-                              </div>
-                            ) : (
-                              <div
-                                className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${
-                                  NICHE_GRADS[c.niche] || NICHE_GRADS['Other Niche']
-                                } text-sm font-bold text-white shadow-soft`}
-                              >
-                                {(c.name || '?')[0]}
-                              </div>
+                      <div className="dl-card group flex h-full flex-col overflow-hidden transition-all duration-300 hover:shadow-mid hover:-translate-y-1">
+                        {/* Card Banner Header */}
+                        <div className="relative h-24 w-full overflow-hidden bg-gradient-to-r from-primary-2 via-primary to-accent/30">
+                          {c.coverImage ? (
+                            <img src={c.coverImage} alt={c.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                          ) : (
+                            <div className="absolute inset-0 bg-dot-grid opacity-30" />
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                          
+                          {/* Media count pills */}
+                          <div className="absolute top-2 right-2 flex items-center gap-1">
+                            {Array.isArray(c.media) && c.media.length > 0 && (
+                              <span className="rounded-full bg-black/60 backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold text-white">
+                                {c.media.length} Photos
+                              </span>
                             )}
-                            {c.verified && (
-                              <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-white shadow">
-                                <BadgeCheck className="h-3 w-3" />
+                            {Array.isArray(c.videos) && c.videos.length > 0 && (
+                              <span className="rounded-full bg-accent/80 backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold text-white">
+                                {c.videos.length} Videos
                               </span>
                             )}
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="flex items-center gap-1.5 truncate text-sm font-semibold text-foreground">
+                        </div>
+
+                        <div className="p-5 flex-1 flex flex-col pt-0">
+                          {/* Avatar Overlapping Banner */}
+                          <div className="relative -mt-8 mb-3 flex items-end justify-between">
+                            <div className="relative">
+                              {c.profileImage ? (
+                                <div className="h-16 w-16 overflow-hidden rounded-2xl border-2 border-surface shadow-soft">
+                                  <Image
+                                    src={c.profileImage}
+                                    alt={c.name}
+                                    width={64}
+                                    height={64}
+                                    className="h-full w-full object-cover"
+                                    unoptimized
+                                  />
+                                </div>
+                              ) : (
+                                <div
+                                  className={`flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-surface bg-gradient-to-br ${
+                                    NICHE_GRADS[c.niche] || NICHE_GRADS['Other Niche']
+                                  } text-lg font-bold text-white shadow-soft`}
+                                >
+                                  {(c.name || '?')[0]}
+                                </div>
+                              )}
+                              {c.verified && (
+                                <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-white shadow">
+                                  <BadgeCheck className="h-3.5 w-3.5" />
+                                </span>
+                              )}
+                            </div>
+
+                            <span className="rounded-full border border-border bg-soft-2 px-2.5 py-1 text-[11px] font-semibold text-muted">
+                              {c.niche}
+                            </span>
+                          </div>
+
+                          <div className="min-w-0">
+                            <p className="flex items-center gap-1.5 truncate text-base font-bold text-foreground">
                               {c.name}
                               {c.verified && (
                                 <BadgeCheck className="h-4 w-4 shrink-0 text-accent" />
                               )}
                             </p>
-                            <p className="flex items-center gap-1 text-xs text-muted-2">
-                              <Users className="h-3 w-3" />
-                              {Number(c.subscriber_count).toLocaleString()} audience
-                            </p>
-                            <SocialIcons socialAccounts={c.socialAccounts || {}} />
+                            {c.tagline && (
+                              <p className="text-xs font-medium text-muted truncate mt-0.5">{c.tagline}</p>
+                            )}
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-2 mt-1">
+                              <span className="flex items-center gap-1 font-semibold text-foreground">
+                                <Users className="h-3 w-3 text-accent" />
+                                {Number(c.subscriber_count).toLocaleString()} audience
+                              </span>
+                              {c.location && (
+                                <span>· {c.location}</span>
+                              )}
+                            </div>
+                            <div className="mt-2">
+                              <SocialIcons socialAccounts={c.socialAccounts || {}} />
+                            </div>
                           </div>
-                        </div>
-                        <p className="mt-3 line-clamp-2 flex-1 text-xs leading-relaxed text-muted">
-                          {c.bio || 'No bio yet.'}
-                        </p>
-                        <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-                          <span className="rounded-full border border-border bg-soft-2 px-2.5 py-1 text-[11px] font-semibold text-muted">
-                            {c.niche}
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-accent transition-all group-hover:gap-1.5">
-                            View profile
-                            <ArrowRight className="h-3 w-3" />
-                          </span>
+
+                          <p className="mt-3 line-clamp-2 flex-1 text-xs leading-relaxed text-muted">
+                            {c.bio || 'Professional content creator on DealLink.'}
+                          </p>
+
+                          <div className="mt-4 flex items-center justify-between border-t border-border pt-3.5">
+                            <span className="text-[11px] font-semibold text-muted">
+                              {c.pricingRate ? `From $${Number(c.pricingRate).toLocaleString()}` : 'Available for briefs'}
+                            </span>
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-accent transition-all group-hover:gap-1.5">
+                              View Profile
+                              <ArrowRight className="h-3 w-3" />
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </Link>

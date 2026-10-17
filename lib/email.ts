@@ -260,3 +260,45 @@ export async function sendDealPaidEmail(
     html: layout(content),
   });
 }
+
+export async function sendChatMessageNotificationEmail(
+  to: string,
+  recipientName: string,
+  senderName: string,
+  previewText: string
+) {
+  if (!isEmailConfigured()) {
+    console.warn('[email] SMTP not configured — chat notification email skipped for', to);
+    return;
+  }
+  const appUrl = process.env.APP_URL || 'https://deal-link.vercel.app';
+  const link = `${appUrl}/creator/dashboard?tab=chat`;
+  const sanitizedPreview =
+    previewText.length > 250 ? `${previewText.substring(0, 250)}...` : previewText;
+
+  const content = `
+    <h1 style="margin:0 0 12px;font-size:22px;color:#0F1B33;">New Message on DealLink / وصلتك رسالة جديدة</h1>
+    <p style="margin:0 0 16px;font-size:15px;color:#54637D;line-height:1.7;">
+      Hi ${recipientName}, you received a new message from <strong>${senderName}</strong>:
+    </p>
+    <div style="margin:16px 0;padding:16px 20px;background-color:#EFF6FF;border-left:4px solid #2563EB;border-radius:10px;font-size:14px;color:#1E293B;line-height:1.6;">
+      &ldquo;${sanitizedPreview}&rdquo;
+    </div>
+    <p style="margin:16px 0 20px;font-size:14px;color:#54637D;">
+      Log in to reply directly via the DealLink portal:
+    </p>
+    ${button(link, 'Open Chat & Reply / فتح الشات')}
+  `;
+
+  try {
+    await transport.sendMail({
+      from: process.env.EMAIL_FROM || 'DealLink <no-reply@deallink.co>',
+      to,
+      subject: `New message on DealLink from ${senderName}`,
+      html: layout(content),
+    });
+  } catch (err) {
+    console.error('[email] Error sending chat notification email to', to, err);
+  }
+}
+
